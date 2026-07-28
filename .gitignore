@@ -49,5 +49,6 @@ app.*.map.json
 /release/*.tar.gz
 /release/*.mp4
 /release/*.gif
+/release/*.wav
 /release/demo_video_frame_*.png
 /release/package_*/
