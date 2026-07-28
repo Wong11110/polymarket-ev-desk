@@ -59,7 +59,8 @@ class AnalysisPage extends ConsumerWidget {
             }
             return Column(
               children: [
-                for (final opportunity in items) OpportunityCard(opportunity: opportunity),
+                for (final opportunity in items)
+                  OpportunityCard(opportunity: opportunity),
               ],
             );
           },

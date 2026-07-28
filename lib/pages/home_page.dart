@@ -43,7 +43,10 @@ class HomePage extends ConsumerWidget {
           const SizedBox(height: 12),
           DecoratedBox(
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.28),
+              color: Theme.of(context)
+                  .colorScheme
+                  .primaryContainer
+                  .withValues(alpha: 0.28),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Padding(
@@ -64,36 +67,55 @@ class HomePage extends ConsumerWidget {
               mainAxisSpacing: 10,
               childAspectRatio: 1.8,
               children: [
-                MetricTile(label: text.bankroll, value: '\$${value.bankrollUsd.toStringAsFixed(0)}'),
-                MetricTile(label: text.evAlert, value: '${(value.evAlertThreshold * 100).toStringAsFixed(1)}%'),
-                MetricTile(label: text.kelly, value: '${(value.kellyFraction * 100).toStringAsFixed(0)}%'),
-                MetricTile(label: text.maxPosition, value: '${(value.maxPositionPct * 100).toStringAsFixed(0)}%'),
+                MetricTile(
+                    label: text.bankroll,
+                    value: '\$${value.bankrollUsd.toStringAsFixed(0)}'),
+                MetricTile(
+                    label: text.evAlert,
+                    value:
+                        '${(value.evAlertThreshold * 100).toStringAsFixed(1)}%'),
+                MetricTile(
+                    label: text.kelly,
+                    value:
+                        '${(value.kellyFraction * 100).toStringAsFixed(0)}%'),
+                MetricTile(
+                    label: text.maxPosition,
+                    value:
+                        '${(value.maxPositionPct * 100).toStringAsFixed(0)}%'),
               ],
             ),
             loading: () => const LinearProgressIndicator(),
             error: (error, _) => Text('${text.settingsError}: $error'),
           ),
           const SizedBox(height: 20),
-          Text(text.topOpportunities, style: Theme.of(context).textTheme.titleLarge),
+          Text(text.topOpportunities,
+              style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 10),
           opportunities.when(
             data: (items) => items.isEmpty
                 ? Text(text.noEvGaps)
                 : Column(
-                    children: items.take(5).map((item) => OpportunityCard(opportunity: item)).toList(),
+                    children: items
+                        .take(5)
+                        .map((item) => OpportunityCard(opportunity: item))
+                        .toList(),
                   ),
-            loading: () => const Center(child: Padding(
+            loading: () => const Center(
+                child: Padding(
               padding: EdgeInsets.all(24),
               child: CircularProgressIndicator(),
             )),
             error: (error, _) => Text('${text.opportunityError}: $error'),
           ),
           const SizedBox(height: 12),
-          Text(text.popularMarkets, style: Theme.of(context).textTheme.titleLarge),
+          Text(text.popularMarkets,
+              style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 10),
           markets.when(
             data: (items) => Column(
-              children: items.map((item) => _MarketRow(market: item, text: text)).toList(),
+              children: items
+                  .map((item) => _MarketRow(market: item, text: text))
+                  .toList(),
             ),
             loading: () => const LinearProgressIndicator(),
             error: (error, _) => Text('${text.marketError}: $error'),
@@ -113,11 +135,13 @@ class _MarketRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currency = NumberFormat.compactCurrency(symbol: r'$');
+    final title = text.marketQuestion(market.question);
+    final category = text.marketCategory(market.category);
     return Card(
       child: ListTile(
-        title: Text(market.question, maxLines: 2, overflow: TextOverflow.ellipsis),
+        title: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis),
         subtitle: Text(
-          '${market.category}  |  ${text.volume} ${currency.format(market.volumeUsd)}  |  ${text.liquidity} ${currency.format(market.liquidityUsd)}',
+          '$category  |  ${text.volume} ${currency.format(market.volumeUsd)}  |  ${text.liquidity} ${currency.format(market.liquidityUsd)}',
         ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,

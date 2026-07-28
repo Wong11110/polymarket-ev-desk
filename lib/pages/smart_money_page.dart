@@ -48,7 +48,10 @@ class SmartMoneyPage extends ConsumerWidget {
                             Expanded(
                               child: Text(
                                 signal.walletLabel,
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(
                                       fontWeight: FontWeight.w700,
                                     ),
                               ),
@@ -57,23 +60,28 @@ class SmartMoneyPage extends ConsumerWidget {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        Text(signal.marketQuestion),
+                        Text(text.marketQuestion(signal.marketQuestion)),
                         const SizedBox(height: 10),
                         Wrap(
                           spacing: 10,
                           runSpacing: 8,
                           children: [
-                            _SignalStat(text.size, currency.format(signal.amountUsd)),
-                            _SignalStat(text.winRate, '${(signal.winRate * 100).toStringAsFixed(0)}%'),
+                            _SignalStat(
+                                text.size, currency.format(signal.amountUsd)),
+                            _SignalStat(text.winRate,
+                                '${(signal.winRate * 100).toStringAsFixed(0)}%'),
                             _SignalStat(text.age, _age(signal.timestamp)),
                           ],
                         ),
                         const SizedBox(height: 10),
                         Text(
                           signal.note,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
                         ),
                       ],
                     ),

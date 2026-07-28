@@ -55,8 +55,10 @@ class Market {
 
     return Market(
       id: '${firstMarket['id'] ?? json['id'] ?? json['slug']}',
-      question: '${firstMarket['question'] ?? json['title'] ?? json['question'] ?? '未命名市场'}',
-      category: '${firstMarket['category'] ?? json['category'] ?? _tagCategory(json) ?? '综合'}',
+      question:
+          '${firstMarket['question'] ?? json['title'] ?? json['question'] ?? '未命名市场'}',
+      category:
+          '${firstMarket['category'] ?? json['category'] ?? _tagCategory(json) ?? '综合'}',
       yesPrice: yesPrice,
       noPrice: noPrice,
       volumeUsd: _asDouble(firstMarket['volume'] ?? json['volume']),
@@ -67,7 +69,8 @@ class Market {
                 _asDouble(firstMarket['bestBid'] ?? firstMarket['bid']))
             .abs(),
       ),
-      endDate: DateTime.tryParse('${json['endDate'] ?? firstMarket['endDate'] ?? ''}') ??
+      endDate: DateTime.tryParse(
+              '${json['endDate'] ?? firstMarket['endDate'] ?? ''}') ??
           DateTime.now().add(const Duration(days: 30)),
       description: json['description']?.toString(),
     );

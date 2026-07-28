@@ -28,7 +28,7 @@ MVP 覆盖从需求拆解、产品原型、前端实现、准实时数据接入�
 - 机会排序：按 EV Gap、流动性和风险等级筛选排序。
 - 仓位管理：Fractional Kelly、单市场最大仓位、单日亏损限制、相关性风险提示。
 - 聪明钱模块：MVP 使用 mock wallet activity，展示大额交易、历史胜率和最近动作。
-- 语言切换：设置页支持 English / 中文。
+- 语言切换：设置页支持 English / 中文，中文模式会本地化常见市场标题并保留英文原题。
 - PWA 支持：适合移动端浏览器加入主屏幕演示。
 - 安全边界：交易执行仅保留入口和 UI 占位，不在客户端保存真实交易密钥。
 
@@ -94,6 +94,8 @@ tool/
 ## 数据和分析逻辑
 
 `PolymarketRepository` 负责隔离数据来源。Web 环境优先访问同源 `/api/polymarket/events`，由本地或 VPS server 代理到 Polymarket Gamma API；接口失败时自动回退到 mock 数据，保证 demo 不会因为网络波动空白。
+
+当前同步方式是 near-real-time polling：市场列表每 60 秒刷新一次，EV Gap 和仓位建议会在每次数据更新后本地重算。它不是 CLOB websocket，也不是毫秒级盘口交易系统。
 
 `AiAnalysisService` 当前使用可解释的本地启发式模型估计 fair probability：综合市场隐含概率、成交量、流动性和价差惩罚。正式版本可以替换为后端 AI research model 或 OpenAI API 分析服务。
 

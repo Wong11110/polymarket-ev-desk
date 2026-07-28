@@ -45,8 +45,9 @@ class PolymarketEvApp extends ConsumerWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         color: scheme.surfaceContainerLow,
       ),
-      scaffoldBackgroundColor:
-          brightness == Brightness.dark ? const Color(0xFF0B0F14) : scheme.surface,
+      scaffoldBackgroundColor: brightness == Brightness.dark
+          ? const Color(0xFF0B0F14)
+          : scheme.surface,
       inputDecorationTheme: const InputDecorationTheme(
         border: OutlineInputBorder(),
       ),
@@ -105,13 +106,16 @@ class _AppShellState extends ConsumerState<AppShell> {
         selectedIndex: _index,
         onDestinationSelected: (value) => setState(() => _index = value),
         destinations: [
-          NavigationDestination(icon: const Icon(Icons.dashboard_outlined), label: text.home),
-          NavigationDestination(icon: const Icon(Icons.analytics_outlined), label: text.analysis),
+          NavigationDestination(
+              icon: const Icon(Icons.dashboard_outlined), label: text.home),
+          NavigationDestination(
+              icon: const Icon(Icons.analytics_outlined), label: text.analysis),
           NavigationDestination(
             icon: const Icon(Icons.account_balance_wallet_outlined),
             label: text.smartMoney,
           ),
-          NavigationDestination(icon: const Icon(Icons.settings_outlined), label: text.settings),
+          NavigationDestination(
+              icon: const Icon(Icons.settings_outlined), label: text.settings),
         ],
       ),
     );

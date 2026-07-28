@@ -16,8 +16,10 @@ class OpportunityCard extends ConsumerWidget {
     final languageCode =
         ref.watch(settingsControllerProvider).valueOrNull?.languageCode ?? 'en';
     final text = AppText(languageCode);
-    final sideColor =
-        opportunity.side == TradeSide.yes ? Colors.greenAccent : Colors.lightBlueAccent;
+    final localizedQuestion = text.marketQuestion(opportunity.market.question);
+    final sideColor = opportunity.side == TradeSide.yes
+        ? Colors.greenAccent
+        : Colors.lightBlueAccent;
     final currency = NumberFormat.compactCurrency(symbol: r'$');
 
     return Card(
@@ -31,71 +33,87 @@ class OpportunityCard extends ConsumerWidget {
           builder: (_) => OpportunityDetailSheet(opportunity: opportunity),
         ),
         child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    opportunity.market.question,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      localizedQuestion,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Chip(
-                  label: Text(opportunity.side.name.toUpperCase()),
-                  backgroundColor: sideColor.withValues(alpha: 0.16),
-                  side: BorderSide(color: sideColor.withValues(alpha: 0.45)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                _Pill('EV Gap', '${(opportunity.evGap * 100).toStringAsFixed(1)}%'),
-                _Pill(text.fairProbability, '${(opportunity.fairProbability * 100).toStringAsFixed(1)}%'),
-                _Pill(text.price, opportunity.price.toStringAsFixed(2)),
-                _Pill(text.suggestedStake, currency.format(opportunity.suggestedStakeUsd)),
-                _Pill('Kelly', '${(opportunity.kellyFraction * 100).toStringAsFixed(1)}%'),
-                _Pill(text.risk, text.riskLabel(opportunity.riskLevel.name)),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              opportunity.reason,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  const SizedBox(width: 10),
+                  Chip(
+                    label: Text(opportunity.side.name.toUpperCase()),
+                    backgroundColor: sideColor.withValues(alpha: 0.16),
+                    side: BorderSide(color: sideColor.withValues(alpha: 0.45)),
                   ),
-            ),
-            const SizedBox(height: 10),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: () => showModalBottomSheet<void>(
-                  context: context,
-                  isScrollControlled: true,
-                  showDragHandle: true,
-                  builder: (_) => OpportunityDetailSheet(opportunity: opportunity),
-                ),
-                icon: const Icon(Icons.tune, size: 18),
-                label: Text(text.details),
+                ],
               ),
-            ),
-          ],
+              if (languageCode == 'zh' &&
+                  localizedQuestion != opportunity.market.question) ...[
+                const SizedBox(height: 6),
+                Text(
+                  '${text.originalTitle}: ${opportunity.market.question}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  _Pill('EV Gap',
+                      '${(opportunity.evGap * 100).toStringAsFixed(1)}%'),
+                  _Pill(text.fairProbability,
+                      '${(opportunity.fairProbability * 100).toStringAsFixed(1)}%'),
+                  _Pill(text.price, opportunity.price.toStringAsFixed(2)),
+                  _Pill(text.suggestedStake,
+                      currency.format(opportunity.suggestedStakeUsd)),
+                  _Pill('Kelly',
+                      '${(opportunity.kellyFraction * 100).toStringAsFixed(1)}%'),
+                  _Pill(text.risk, text.riskLabel(opportunity.riskLevel.name)),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                opportunity.reason,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+              const SizedBox(height: 10),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: () => showModalBottomSheet<void>(
+                    context: context,
+                    isScrollControlled: true,
+                    showDragHandle: true,
+                    builder: (_) =>
+                        OpportunityDetailSheet(opportunity: opportunity),
+                  ),
+                  icon: const Icon(Icons.tune, size: 18),
+                  label: Text(text.details),
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
-
 }
 
 class OpportunityDetailSheet extends ConsumerStatefulWidget {
@@ -104,10 +122,12 @@ class OpportunityDetailSheet extends ConsumerStatefulWidget {
   final Opportunity opportunity;
 
   @override
-  ConsumerState<OpportunityDetailSheet> createState() => _OpportunityDetailSheetState();
+  ConsumerState<OpportunityDetailSheet> createState() =>
+      _OpportunityDetailSheetState();
 }
 
-class _OpportunityDetailSheetState extends ConsumerState<OpportunityDetailSheet> {
+class _OpportunityDetailSheetState
+    extends ConsumerState<OpportunityDetailSheet> {
   late double _fairProbability;
 
   @override
@@ -121,6 +141,8 @@ class _OpportunityDetailSheetState extends ConsumerState<OpportunityDetailSheet>
     final settings = ref.watch(settingsControllerProvider).valueOrNull;
     final languageCode = settings?.languageCode ?? 'en';
     final text = AppText(languageCode);
+    final localizedQuestion =
+        text.marketQuestion(widget.opportunity.market.question);
     final service = ref.watch(aiAnalysisServiceProvider);
     final currency = NumberFormat.compactCurrency(symbol: r'$');
     final updated = settings == null
@@ -153,9 +175,20 @@ class _OpportunityDetailSheetState extends ConsumerState<OpportunityDetailSheet>
               ),
               const SizedBox(height: 8),
               Text(
-                widget.opportunity.market.question,
+                localizedQuestion,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
+              if (languageCode == 'zh' &&
+                  localizedQuestion != widget.opportunity.market.question)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    '${text.originalTitle}: ${widget.opportunity.market.question}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                ),
               const SizedBox(height: 14),
               Wrap(
                 spacing: 10,
@@ -163,9 +196,12 @@ class _OpportunityDetailSheetState extends ConsumerState<OpportunityDetailSheet>
                 children: [
                   _Pill('Side', updated.side.name.toUpperCase()),
                   _Pill(text.price, updated.price.toStringAsFixed(3)),
-                  _Pill('EV Gap', '${(updated.evGap * 100).toStringAsFixed(1)}%'),
-                  _Pill(text.expectedRoi, '${(updated.expectedRoi * 100).toStringAsFixed(1)}%'),
-                  _Pill(text.suggestedStake, currency.format(updated.suggestedStakeUsd)),
+                  _Pill(
+                      'EV Gap', '${(updated.evGap * 100).toStringAsFixed(1)}%'),
+                  _Pill(text.expectedRoi,
+                      '${(updated.expectedRoi * 100).toStringAsFixed(1)}%'),
+                  _Pill(text.suggestedStake,
+                      currency.format(updated.suggestedStakeUsd)),
                   _Pill(text.risk, text.riskLabel(updated.riskLevel.name)),
                 ],
               ),

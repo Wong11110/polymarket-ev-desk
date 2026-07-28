@@ -23,7 +23,8 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
 });
 
 final settingsControllerProvider =
-    AsyncNotifierProvider<SettingsController, RiskSettings>(SettingsController.new);
+    AsyncNotifierProvider<SettingsController, RiskSettings>(
+        SettingsController.new);
 
 class SettingsController extends AsyncNotifier<RiskSettings> {
   static const _bankroll = 'bankrollUsd';
@@ -42,18 +43,22 @@ class SettingsController extends AsyncNotifier<RiskSettings> {
     final prefs = await SharedPreferences.getInstance();
     final storedApiKey = await _readApiKey();
     return RiskSettings(
-      bankrollUsd: prefs.getDouble(_bankroll) ?? RiskSettings.defaults.bankrollUsd,
-      maxPositionPct: prefs.getDouble(_maxPosition) ?? RiskSettings.defaults.maxPositionPct,
-      dailyLossLimitPct:
-          prefs.getDouble(_dailyLoss) ?? RiskSettings.defaults.dailyLossLimitPct,
-      kellyFraction: prefs.getDouble(_kelly) ?? RiskSettings.defaults.kellyFraction,
-      evAlertThreshold:
-          prefs.getDouble(_evThreshold) ?? RiskSettings.defaults.evAlertThreshold,
-      minLiquidityUsd:
-          prefs.getDouble(_minLiquidity) ?? RiskSettings.defaults.minLiquidityUsd,
+      bankrollUsd:
+          prefs.getDouble(_bankroll) ?? RiskSettings.defaults.bankrollUsd,
+      maxPositionPct:
+          prefs.getDouble(_maxPosition) ?? RiskSettings.defaults.maxPositionPct,
+      dailyLossLimitPct: prefs.getDouble(_dailyLoss) ??
+          RiskSettings.defaults.dailyLossLimitPct,
+      kellyFraction:
+          prefs.getDouble(_kelly) ?? RiskSettings.defaults.kellyFraction,
+      evAlertThreshold: prefs.getDouble(_evThreshold) ??
+          RiskSettings.defaults.evAlertThreshold,
+      minLiquidityUsd: prefs.getDouble(_minLiquidity) ??
+          RiskSettings.defaults.minLiquidityUsd,
       openAiApiKey: storedApiKey,
       darkMode: prefs.getBool(_darkMode) ?? RiskSettings.defaults.darkMode,
-      languageCode: prefs.getString(_languageCode) ?? RiskSettings.defaults.languageCode,
+      languageCode:
+          prefs.getString(_languageCode) ?? RiskSettings.defaults.languageCode,
     );
   }
 
@@ -73,7 +78,8 @@ class SettingsController extends AsyncNotifier<RiskSettings> {
 
   Future<String> _readApiKey() async {
     try {
-      return await _secureStorage.read(key: _apiKey) ?? RiskSettings.defaults.openAiApiKey;
+      return await _secureStorage.read(key: _apiKey) ??
+          RiskSettings.defaults.openAiApiKey;
     } catch (_) {
       return RiskSettings.defaults.openAiApiKey;
     }
@@ -110,7 +116,8 @@ final opportunitiesProvider = FutureProvider<List<Opportunity>>((ref) async {
   final settings = await ref.watch(settingsControllerProvider.future);
   final service = ref.watch(aiAnalysisServiceProvider);
   final notificationService = ref.watch(notificationServiceProvider);
-  final opportunities = service.analyzeMarkets(markets: markets, settings: settings);
+  final opportunities =
+      service.analyzeMarkets(markets: markets, settings: settings);
 
   for (final opportunity in opportunities.take(3)) {
     await notificationService.notifyForOpportunity(opportunity, settings);

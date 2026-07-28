@@ -17,7 +17,8 @@ class AiAnalysisService {
     final opportunities = <Opportunity>[];
 
     for (final market in markets) {
-      final fairYes = fairProbabilities[market.id] ?? estimateFairProbability(market);
+      final fairYes =
+          fairProbabilities[market.id] ?? estimateFairProbability(market);
       final fairNo = 1 - fairYes;
 
       opportunities.addAll([
@@ -45,12 +46,15 @@ class AiAnalysisService {
         .toList()
       ..sort((a, b) {
         final byEv = b.evGap.compareTo(a.evGap);
-        return byEv != 0 ? byEv : b.market.liquidityUsd.compareTo(a.market.liquidityUsd);
+        return byEv != 0
+            ? byEv
+            : b.market.liquidityUsd.compareTo(a.market.liquidityUsd);
       });
   }
 
   double estimateFairProbability(Market market) {
-    final liquiditySignal = (market.liquidityUsd / 100000).clamp(0, 0.08).toDouble();
+    final liquiditySignal =
+        (market.liquidityUsd / 100000).clamp(0, 0.08).toDouble();
     final volumeSignal = (market.volumeUsd / 1000000).clamp(0, 0.05).toDouble();
     final spreadPenalty = market.spread.clamp(0, 0.08).toDouble();
     final base = market.impliedYesProbability;
@@ -69,8 +73,9 @@ class AiAnalysisService {
       market: market,
       side: side,
       fairProbability: fairProbability,
-      impliedProbability:
-          side == TradeSide.yes ? market.impliedYesProbability : market.impliedNoProbability,
+      impliedProbability: side == TradeSide.yes
+          ? market.impliedYesProbability
+          : market.impliedNoProbability,
       settings: settings,
     );
   }
@@ -84,7 +89,8 @@ class AiAnalysisService {
   }) {
     final price = side == TradeSide.yes ? market.yesPrice : market.noPrice;
     final evGap = fairProbability - impliedProbability;
-    final correlationPenalty = market.category.toLowerCase().contains('politic') ? 0.15 : 0.05;
+    final correlationPenalty =
+        market.category.toLowerCase().contains('politic') ? 0.15 : 0.05;
     final position = _riskService.recommendStake(
       price: price,
       fairProbability: fairProbability,
@@ -138,14 +144,19 @@ class AiAnalysisService {
   }
 
   double _confidenceFor(Market market, double evGap) {
-    final liquidityScore = (market.liquidityUsd / 50000).clamp(0, 0.35).toDouble();
+    final liquidityScore =
+        (market.liquidityUsd / 50000).clamp(0, 0.35).toDouble();
     final evScore = (evGap / 0.15).clamp(0, 0.45).toDouble();
     final spreadScore = (0.2 - market.spread).clamp(0, 0.2).toDouble();
-    return (liquidityScore + evScore + spreadScore).clamp(0.05, 0.95).toDouble();
+    return (liquidityScore + evScore + spreadScore)
+        .clamp(0.05, 0.95)
+        .toDouble();
   }
 
   RiskLevel _riskFor(Market market, double evGap) {
-    if (market.liquidityUsd < 5000 || market.spread > 0.08) return RiskLevel.high;
+    if (market.liquidityUsd < 5000 || market.spread > 0.08) {
+      return RiskLevel.high;
+    }
     if (evGap > 0.08 && market.liquidityUsd > 25000) return RiskLevel.low;
     return RiskLevel.medium;
   }

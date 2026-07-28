@@ -7,7 +7,8 @@ import '../models/market.dart';
 import '../models/smart_money_signal.dart';
 
 class PolymarketRepository {
-  PolymarketRepository({http.Client? client}) : _client = client ?? http.Client();
+  PolymarketRepository({http.Client? client})
+      : _client = client ?? http.Client();
 
   final http.Client _client;
 
@@ -15,7 +16,8 @@ class PolymarketRepository {
     final uri = _popularMarketsUri();
 
     try {
-      final response = await _client.get(uri).timeout(const Duration(seconds: 8));
+      final response =
+          await _client.get(uri).timeout(const Duration(seconds: 8));
       if (response.statusCode != 200) return mockMarkets;
       final decoded = jsonDecode(response.body);
       if (decoded is! List) return mockMarkets;
@@ -23,9 +25,8 @@ class PolymarketRepository {
       final markets = decoded.whereType<Map<String, dynamic>>().expand((event) {
         final nestedMarkets = event['markets'];
         if (nestedMarkets is List && nestedMarkets.isNotEmpty) {
-          return nestedMarkets
-              .whereType<Map<String, dynamic>>()
-              .map((market) => Market.fromGammaEventMarket(event: event, market: market));
+          return nestedMarkets.whereType<Map<String, dynamic>>().map((market) =>
+              Market.fromGammaEventMarket(event: event, market: market));
         }
         return [Market.fromGammaJson(event)];
       }).where((market) {
@@ -43,7 +44,8 @@ class PolymarketRepository {
   }
 
   Uri _popularMarketsUri() {
-    const query = 'active=true&closed=false&limit=20&order=volume&ascending=false';
+    const query =
+        'active=true&closed=false&limit=20&order=volume&ascending=false';
     if (kIsWeb) {
       return Uri.parse('/api/polymarket/events?$query');
     }

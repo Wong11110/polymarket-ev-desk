@@ -34,13 +34,15 @@ class AppText {
   String get kelly => pick('Kelly', 'Kelly 系数');
   String get maxPosition => pick('Max Position', '单市场上限');
   String get topOpportunities => pick('Top Opportunities', '当前机会');
-  String get noEvGaps => pick('No EV gaps above your threshold yet.', '暂时没有超过阈值的 EV Gap。');
+  String get noEvGaps =>
+      pick('No EV gaps above your threshold yet.', '暂时没有超过阈值的 EV Gap。');
   String get popularMarkets => pick('Popular Markets', '热门市场');
   String get settingsError => pick('Settings error', '设置读取失败');
   String get opportunityError => pick('Opportunity error', '机会分析失败');
   String get marketError => pick('Market error', '行情加载失败');
   String get volume => pick('Vol', '成交');
   String get liquidity => pick('Liq', '流动性');
+  String get originalTitle => pick('Original', '原题');
 
   String get analysisTitle => pick('EV Gap Analysis', 'EV Gap 分析');
   String get refresh => pick('Refresh', '刷新行情');
@@ -75,7 +77,8 @@ class AppText {
   String get dailyLossLimit => pick('Daily Loss Limit', '单日亏损限制');
   String get minLiquidity => pick('Min Liquidity', '最低流动性');
   String get darkMode => pick('Dark Mode', '深色模式');
-  String get apiKeyPlaceholder => pick('OpenAI API Key placeholder', 'OpenAI API Key（预留）');
+  String get apiKeyPlaceholder =>
+      pick('OpenAI API Key placeholder', 'OpenAI API Key（预留）');
   String get apiKeyHelper => pick(
         'For production, proxy AI and trading keys through a backend. Do not hardcode secrets in the frontend.',
         '正式版建议通过后端代理处理 AI 和交易密钥，前端不要硬编码。',
@@ -110,4 +113,78 @@ class AppText {
       _ => value,
     };
   }
+
+  String marketQuestion(String value) {
+    if (!zh) return value;
+    final normalized = value.trim().replaceAll(RegExp(r'\s+'), ' ');
+    final exact = _marketQuestionZh[normalized.toLowerCase()];
+    if (exact != null) return exact;
+    return _translateCommonMarketTerms(normalized);
+  }
+
+  String marketCategory(String value) {
+    if (!zh) return value;
+    return _categoryZh[value.trim().toLowerCase()] ?? value;
+  }
+
+  String _translateCommonMarketTerms(String value) {
+    var translated = value;
+    for (final entry in _commonMarketTermsZh.entries) {
+      translated = translated.replaceAll(
+        RegExp(entry.key, caseSensitive: false),
+        entry.value,
+      );
+    }
+    return translated == value ? value : translated;
+  }
 }
+
+const _marketQuestionZh = <String, String>{
+  'will the fed cut rates at the next fomc meeting?': '美联储会在下一次 FOMC 会议降息吗？',
+  'will btc close above \$100k before year end?': 'BTC 会在年底前收于 10 万美元上方吗？',
+  'will candidate a win the national election?': '候选人 A 会赢得全国大选吗？',
+  'will a frontier ai lab release a new flagship model in q3?':
+      '一线 AI 实验室会在第三季度发布新的旗舰模型吗？',
+};
+
+const _categoryZh = <String, String>{
+  'macro': '宏观',
+  'crypto': '加密',
+  'politics': '政治',
+  'technology': '科技',
+  'sports': '体育',
+  'economics': '经济',
+  'business': '商业',
+  'elections': '选举',
+  'culture': '文化',
+  '综合': '综合',
+};
+
+const _commonMarketTermsZh = <String, String>{
+  r'\bWill\b': '是否',
+  r'\bFed\b': '美联储',
+  r'\brates\b': '利率',
+  r'\bFOMC\b': 'FOMC',
+  r'\bBTC\b': 'BTC',
+  r'\bBitcoin\b': '比特币',
+  r'\bEthereum\b': '以太坊',
+  r'\bETH\b': 'ETH',
+  r'\bTrump\b': '特朗普',
+  r'\bBiden\b': '拜登',
+  r'\belection\b': '选举',
+  r'\bnational\b': '全国',
+  r'\bAI\b': 'AI',
+  r'\bmodel\b': '模型',
+  r'\brelease\b': '发布',
+  r'\babove\b': '高于',
+  r'\bbelow\b': '低于',
+  r'\bbefore\b': '之前',
+  r'\bafter\b': '之后',
+  r'\bwin\b': '获胜',
+  r'\bclose\b': '收盘',
+  r'\byear end\b': '年底',
+  r'\bin Q1\b': '在第一季度',
+  r'\bin Q2\b': '在第二季度',
+  r'\bin Q3\b': '在第三季度',
+  r'\bin Q4\b': '在第四季度',
+};

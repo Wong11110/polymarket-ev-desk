@@ -17,9 +17,13 @@ class MetricTile extends StatelessWidget {
     final color = accent ?? Theme.of(context).colorScheme.primary;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.58),
+        color: Theme.of(context)
+            .colorScheme
+            .surfaceContainerHighest
+            .withValues(alpha: 0.58),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.3)),
+        border: Border.all(
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.3)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),

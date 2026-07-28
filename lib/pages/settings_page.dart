@@ -74,7 +74,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         ],
                         selected: {settings.languageCode},
                         onSelectionChanged: (values) {
-                          _update(settings.copyWith(languageCode: values.first));
+                          _update(
+                              settings.copyWith(languageCode: values.first));
                         },
                       ),
                     ),
@@ -100,7 +101,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               min: 0.01,
               max: 0.2,
               label: '${(settings.evAlertThreshold * 100).toStringAsFixed(1)}%',
-              onChanged: (value) => _update(settings.copyWith(evAlertThreshold: value)),
+              onChanged: (value) =>
+                  _update(settings.copyWith(evAlertThreshold: value)),
             ),
             _SliderTile(
               title: text.kellyFraction,
@@ -108,7 +110,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               min: 0.05,
               max: 1,
               label: '${(settings.kellyFraction * 100).toStringAsFixed(0)}%',
-              onChanged: (value) => _update(settings.copyWith(kellyFraction: value)),
+              onChanged: (value) =>
+                  _update(settings.copyWith(kellyFraction: value)),
             ),
             _SliderTile(
               title: text.maxPositionPct,
@@ -116,15 +119,18 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               min: 0.01,
               max: 0.25,
               label: '${(settings.maxPositionPct * 100).toStringAsFixed(0)}%',
-              onChanged: (value) => _update(settings.copyWith(maxPositionPct: value)),
+              onChanged: (value) =>
+                  _update(settings.copyWith(maxPositionPct: value)),
             ),
             _SliderTile(
               title: text.dailyLossLimit,
               value: settings.dailyLossLimitPct,
               min: 0.02,
               max: 0.3,
-              label: '${(settings.dailyLossLimitPct * 100).toStringAsFixed(0)}%',
-              onChanged: (value) => _update(settings.copyWith(dailyLossLimitPct: value)),
+              label:
+                  '${(settings.dailyLossLimitPct * 100).toStringAsFixed(0)}%',
+              onChanged: (value) =>
+                  _update(settings.copyWith(dailyLossLimitPct: value)),
             ),
             _SliderTile(
               title: text.minLiquidity,
@@ -133,7 +139,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               max: 100000,
               divisions: 199,
               label: '\$${settings.minLiquidityUsd.toStringAsFixed(0)}',
-              onChanged: (value) => _update(settings.copyWith(minLiquidityUsd: value)),
+              onChanged: (value) =>
+                  _update(settings.copyWith(minLiquidityUsd: value)),
             ),
             const SizedBox(height: 8),
             SwitchListTile(
@@ -167,7 +174,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   Future<void> _save(RiskSettings settings) async {
-    final parsedBankroll = double.tryParse(_bankroll.text.trim()) ?? settings.bankrollUsd;
+    final parsedBankroll =
+        double.tryParse(_bankroll.text.trim()) ?? settings.bankrollUsd;
     await _update(
       settings.copyWith(
         bankrollUsd: parsedBankroll,

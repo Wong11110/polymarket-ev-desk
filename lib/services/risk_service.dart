@@ -47,7 +47,8 @@ class RiskService {
         max(0.0, rawKelly * settings.kellyFraction * (1 - correlationPenalty));
     final maxStake = settings.bankrollUsd * settings.maxPositionPct;
     final dailyLossCap = settings.bankrollUsd * settings.dailyLossLimitPct;
-    final stake = min(settings.bankrollUsd * adjustedKelly, min(maxStake, dailyLossCap));
+    final stake =
+        min(settings.bankrollUsd * adjustedKelly, min(maxStake, dailyLossCap));
 
     final warning = correlationPenalty > 0.2
         ? zh
