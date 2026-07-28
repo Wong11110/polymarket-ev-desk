@@ -14,9 +14,9 @@ MVP 覆盖从需求拆解、产品原型、前端实现、准实时数据接入�
 
 ## Demo
 
+- 在线 Demo：<https://ev.aldacareer.online>
 - Web/PWA 体验包：见 GitHub Release 或本地 `release/` 目录。
 - iPhone 演示方式：用 Safari 打开 HTTPS Demo URL，然后选择“添加到主屏幕”。
-- VPS 目标域名：`https://ev.aldacareer.online`，需要在 Cloudflare Tunnel 中添加 public hostname 后生效。
 - 当前 Windows 本地预览：`http://localhost:8080`
 
 如果暂时没有公开域名，也可以把 `polymarket_ev_desk_web_demo.zip` 解压到任意 HTTPS 静态站点、Nginx、Cloudflare Pages、Vercel 或 GitHub Pages。
