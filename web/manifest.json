@@ -1,7 +1,7 @@
 {
   "name": "Polymarket EV Desk",
   "short_name": "EV Desk",
-  "description": "Polymarket EV gap analysis dashboard with risk-aware position sizing.",
+  "description": "Mobile-first Polymarket market radar, EV analysis, watchlist, and risk-aware position sizing.",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
@@ -9,6 +9,22 @@
   "background_color": "#0B0F14",
   "theme_color": "#0B0F14",
   "categories": ["finance", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Market Radar",
+      "short_name": "Markets",
+      "description": "Open the market radar and watchlist.",
+      "url": "./",
+      "icons": [{ "src": "icons/Icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "EV Signals",
+      "short_name": "Signals",
+      "description": "Open current EV gap opportunities.",
+      "url": "./",
+      "icons": [{ "src": "icons/Icon-192.png", "sizes": "192x192" }]
+    }
+  ],
   "icons": [
     {
       "src": "icons/Icon-192.png",

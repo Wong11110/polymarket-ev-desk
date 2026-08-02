@@ -12,6 +12,12 @@ class Market {
     required this.spread,
     required this.endDate,
     this.description,
+    this.slug,
+    this.eventSlug,
+    this.imageUrl,
+    this.bestBid,
+    this.bestAsk,
+    this.volume24hUsd,
   });
 
   final String id;
@@ -24,10 +30,27 @@ class Market {
   final double spread;
   final DateTime endDate;
   final String? description;
+  final String? slug;
+  final String? eventSlug;
+  final String? imageUrl;
+  final double? bestBid;
+  final double? bestAsk;
+  final double? volume24hUsd;
 
   double get impliedYesProbability => yesPrice.clamp(0, 1).toDouble();
   double get impliedNoProbability => noPrice.clamp(0, 1).toDouble();
   bool get isBinaryArbCandidate => yesPrice + noPrice < 0.99;
+  double get noVigSum => yesPrice + noPrice;
+  double get liquidityScore =>
+      ((liquidityUsd / 250000) + (volumeUsd / 5000000) - spread)
+          .clamp(0, 1)
+          .toDouble();
+  bool get isEndingSoon => endDate.difference(DateTime.now()).inDays <= 7;
+  String get polymarketUrl {
+    final safeSlug = slug ?? eventSlug;
+    if (safeSlug == null || safeSlug.isEmpty) return 'https://polymarket.com';
+    return 'https://polymarket.com/event/$safeSlug';
+  }
 
   factory Market.fromGammaJson(Map<String, dynamic> json) {
     final markets = json['markets'];
@@ -73,6 +96,15 @@ class Market {
               '${json['endDate'] ?? firstMarket['endDate'] ?? ''}') ??
           DateTime.now().add(const Duration(days: 30)),
       description: json['description']?.toString(),
+      slug: firstMarket['slug']?.toString() ?? json['slug']?.toString(),
+      eventSlug: json['slug']?.toString(),
+      imageUrl: firstMarket['image']?.toString() ??
+          json['image']?.toString() ??
+          json['icon']?.toString(),
+      bestBid: _nullableDouble(firstMarket['bestBid'] ?? firstMarket['bid']),
+      bestAsk: _nullableDouble(firstMarket['bestAsk'] ?? firstMarket['ask']),
+      volume24hUsd:
+          _nullableDouble(firstMarket['volume24hr'] ?? json['volume24hr']),
     );
   }
 
@@ -104,6 +136,13 @@ class Market {
     if (value is num) return value.toDouble();
     if (value is String) return double.tryParse(value) ?? fallback;
     return fallback;
+  }
+
+  static double? _nullableDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
   }
 
   static String? _tagCategory(Map<String, dynamic> json) {

@@ -22,6 +22,79 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
   return NotificationService();
 });
 
+enum MarketSortMode { evGap, volume, liquidity, spread, endingSoon }
+
+class MarketFilterState {
+  const MarketFilterState({
+    this.query = '',
+    this.category = 'All',
+    this.sortMode = MarketSortMode.evGap,
+    this.watchlistOnly = false,
+  });
+
+  final String query;
+  final String category;
+  final MarketSortMode sortMode;
+  final bool watchlistOnly;
+
+  MarketFilterState copyWith({
+    String? query,
+    String? category,
+    MarketSortMode? sortMode,
+    bool? watchlistOnly,
+  }) {
+    return MarketFilterState(
+      query: query ?? this.query,
+      category: category ?? this.category,
+      sortMode: sortMode ?? this.sortMode,
+      watchlistOnly: watchlistOnly ?? this.watchlistOnly,
+    );
+  }
+}
+
+final marketFilterProvider =
+    NotifierProvider<MarketFilterController, MarketFilterState>(
+  MarketFilterController.new,
+);
+
+class MarketFilterController extends Notifier<MarketFilterState> {
+  @override
+  MarketFilterState build() => const MarketFilterState();
+
+  void setQuery(String value) => state = state.copyWith(query: value);
+  void setCategory(String value) => state = state.copyWith(category: value);
+  void setSortMode(MarketSortMode value) => state = state.copyWith(sortMode: value);
+  void setWatchlistOnly(bool value) =>
+      state = state.copyWith(watchlistOnly: value);
+}
+
+final watchlistProvider =
+    AsyncNotifierProvider<WatchlistController, Set<String>>(
+  WatchlistController.new,
+);
+
+class WatchlistController extends AsyncNotifier<Set<String>> {
+  static const _key = 'watchlistMarketIds';
+
+  @override
+  Future<Set<String>> build() async {
+    final prefs = await SharedPreferences.getInstance();
+    return (prefs.getStringList(_key) ?? const <String>[]).toSet();
+  }
+
+  Future<void> toggle(String marketId) async {
+    final current = {...(state.valueOrNull ?? const <String>{})};
+    if (current.contains(marketId)) {
+      current.remove(marketId);
+    } else {
+      current.add(marketId);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_key, current.toList()..sort());
+    state = AsyncData(current);
+  }
+}
+
 final settingsControllerProvider =
     AsyncNotifierProvider<SettingsController, RiskSettings>(
         SettingsController.new);
@@ -106,6 +179,11 @@ final marketsProvider = StreamProvider.autoDispose<List<Market>>((ref) async* {
   }
 });
 
+final marketCategoriesProvider = Provider<List<String>>((ref) {
+  final markets = ref.watch(marketsProvider).valueOrNull ?? const <Market>[];
+  return ['All', ...{for (final market in markets) market.category}];
+});
+
 final smartMoneyProvider = FutureProvider<List<SmartMoneySignal>>((ref) async {
   final repository = ref.watch(polymarketRepositoryProvider);
   return repository.fetchSmartMoneySignals();
@@ -124,4 +202,36 @@ final opportunitiesProvider = FutureProvider<List<Opportunity>>((ref) async {
   }
 
   return opportunities;
+});
+
+final filteredOpportunitiesProvider = Provider<List<Opportunity>>((ref) {
+  final opportunities =
+      ref.watch(opportunitiesProvider).valueOrNull ?? const <Opportunity>[];
+  final filter = ref.watch(marketFilterProvider);
+  final watchlist = ref.watch(watchlistProvider).valueOrNull ?? const <String>{};
+  final query = filter.query.trim().toLowerCase();
+
+  final filtered = opportunities.where((item) {
+    final market = item.market;
+    if (filter.watchlistOnly && !watchlist.contains(market.id)) return false;
+    if (filter.category != 'All' && market.category != filter.category) {
+      return false;
+    }
+    if (query.isEmpty) return true;
+    return market.question.toLowerCase().contains(query) ||
+        market.category.toLowerCase().contains(query);
+  }).toList();
+
+  filtered.sort((a, b) {
+    return switch (filter.sortMode) {
+      MarketSortMode.evGap => b.evGap.compareTo(a.evGap),
+      MarketSortMode.volume =>
+        b.market.volumeUsd.compareTo(a.market.volumeUsd),
+      MarketSortMode.liquidity =>
+        b.market.liquidityUsd.compareTo(a.market.liquidityUsd),
+      MarketSortMode.spread => a.market.spread.compareTo(b.market.spread),
+      MarketSortMode.endingSoon => a.market.endDate.compareTo(b.market.endDate),
+    };
+  });
+  return filtered;
 });

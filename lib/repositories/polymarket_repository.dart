@@ -45,7 +45,7 @@ class PolymarketRepository {
 
   Uri _popularMarketsUri() {
     const query =
-        'active=true&closed=false&limit=20&order=volume&ascending=false';
+        'active=true&closed=false&limit=50&order=volume&ascending=false';
     if (kIsWeb) {
       return Uri.parse('/api/polymarket/events?$query');
     }
@@ -102,6 +102,42 @@ class PolymarketRepository {
       liquidityUsd: 42000,
       spread: 0.031,
       endDate: DateTime(2026, 9, 30),
+    ),
+    Market(
+      id: 'mvp-world-cup',
+      question: 'Will Team USA win the 2026 World Cup?',
+      category: 'Sports',
+      yesPrice: 0.12,
+      noPrice: 0.89,
+      volumeUsd: 3900000,
+      liquidityUsd: 260000,
+      spread: 0.011,
+      endDate: DateTime(2026, 7, 19),
+      slug: 'will-team-usa-win-the-2026-world-cup',
+    ),
+    Market(
+      id: 'mvp-eth-etf',
+      question: 'Will ETH close above \$8,000 before 2027?',
+      category: 'Crypto',
+      yesPrice: 0.27,
+      noPrice: 0.75,
+      volumeUsd: 2100000,
+      liquidityUsd: 135000,
+      spread: 0.019,
+      endDate: DateTime(2026, 12, 31),
+      slug: 'will-eth-close-above-8000-before-2027',
+    ),
+    Market(
+      id: 'mvp-ai-agent',
+      question: 'Will an AI agent complete a Fortune 500 workflow autonomously in 2026?',
+      category: 'Technology',
+      yesPrice: 0.36,
+      noPrice: 0.66,
+      volumeUsd: 870000,
+      liquidityUsd: 64000,
+      spread: 0.024,
+      endDate: DateTime(2026, 12, 31),
+      slug: 'will-an-ai-agent-complete-a-fortune-500-workflow-autonomously-in-2026',
     ),
   ];
 
