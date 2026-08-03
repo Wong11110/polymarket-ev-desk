@@ -18,6 +18,8 @@ class Market {
     this.bestBid,
     this.bestAsk,
     this.volume24hUsd,
+    this.yesTokenId,
+    this.noTokenId,
   });
 
   final String id;
@@ -36,6 +38,8 @@ class Market {
   final double? bestBid;
   final double? bestAsk;
   final double? volume24hUsd;
+  final String? yesTokenId;
+  final String? noTokenId;
 
   double get impliedYesProbability => yesPrice.clamp(0, 1).toDouble();
   double get impliedNoProbability => noPrice.clamp(0, 1).toDouble();
@@ -60,6 +64,7 @@ class Market {
 
     final outcomes = _decodeList(firstMarket['outcomes']);
     final prices = _decodeList(firstMarket['outcomePrices']);
+    final tokenIds = _decodeList(firstMarket['clobTokenIds']);
     final yesIndex = outcomes.indexWhere(
       (value) => value.toString().toLowerCase() == 'yes',
     );
@@ -105,6 +110,8 @@ class Market {
       bestAsk: _nullableDouble(firstMarket['bestAsk'] ?? firstMarket['ask']),
       volume24hUsd:
           _nullableDouble(firstMarket['volume24hr'] ?? json['volume24hr']),
+      yesTokenId: _tokenAt(tokenIds, yesIndex),
+      noTokenId: _tokenAt(tokenIds, noIndex),
     );
   }
 
@@ -145,6 +152,12 @@ class Market {
     return null;
   }
 
+  static String? _tokenAt(List<dynamic> tokenIds, int index) {
+    if (index < 0 || index >= tokenIds.length) return null;
+    final token = tokenIds[index].toString().trim();
+    return token.isEmpty ? null : token;
+  }
+
   static String? _tagCategory(Map<String, dynamic> json) {
     final tags = json['tags'];
     if (tags is! List || tags.isEmpty) return null;
@@ -153,4 +166,11 @@ class Market {
     }
     return null;
   }
+}
+
+class PricePoint {
+  const PricePoint({required this.timestamp, required this.price});
+
+  final DateTime timestamp;
+  final double price;
 }

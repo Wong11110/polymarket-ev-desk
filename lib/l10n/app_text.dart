@@ -2,69 +2,52 @@ class AppText {
   const AppText(this.languageCode);
 
   final String languageCode;
-
   bool get zh => languageCode == 'zh';
-
   String pick(String en, String cn) => zh ? cn : en;
 
-  String get appTitle => pick('Polymarket EV Desk', 'Polymarket 机会台');
+  String get appTitle => pick('Polymarket EV Desk', 'Polymarket 机会雷达');
   String get home => pick('Home', '首页');
   String get analysis => pick('Analysis', '分析');
   String get smartMoney => pick('Smart Money', '聪明钱');
   String get settings => pick('Settings', '设置');
+  String get ok => pick('OK', '知道了');
   String get executionDisabled => pick('Execution disabled', '交易执行未启用');
   String get executionDisabledBody => pick(
-        'This MVP is analysis-only and does not place real orders. Add backend signing, manual confirmation, slippage controls, and order-state checks before enabling trading.',
-        '当前版本只做行情分析和仓位建议，不会真实下单。上线交易前需要后端签名、人工确认、滑点保护和订单状态校验。',
+        'This app is analysis-only and does not place real orders. A production execution path needs backend signing, manual confirmation, slippage limits, and order-state checks.',
+        '当前版本只做行情分析和仓位建议，不会真实下单。正式交易还需要后端签名、人工确认、滑点保护和订单状态校验。',
       );
-  String get ok => pick('OK', '知道了');
   String get tradePlaceholder => pick('Trade execution disabled', '交易执行未启用');
 
-  String get dashboardTitle => pick('Polymarket EV Desk', 'Polymarket 套利机会台');
-  String get dashboardSubtitle => pick(
-        'Near-real-time markets, EV Gap analysis, and Kelly-aware position sizing. Analysis only; no real orders are placed.',
-        '准实时行情 + EV Gap 分析 + Kelly 仓位建议。当前只做分析，不会真实下单。',
-      );
-  String get realtimeNote => pick(
-        'Data note: market prices are polled from the Polymarket Gamma API every 60 seconds. EV and position sizing are recalculated locally after each update. Fair probability is currently a local heuristic, not a live external AI forecast.',
-        '实时性说明：市场价格每 60 秒从 Polymarket Gamma API 轮询一次；EV 和仓位建议会跟随最新价格本地重算。fair probability 目前是本地启发式估计，不是外部 AI 实时预测。',
-      );
-  String get bankroll => pick('Bankroll', '资金规模');
+  String get dashboardTitle => pick('Polymarket EV Desk', 'Polymarket 机会雷达');
   String get evAlert => pick('EV Alert', 'EV 提醒线');
-  String get kelly => pick('Kelly', 'Kelly 系数');
-  String get maxPosition => pick('Max Position', '单市场上限');
-  String get topOpportunities => pick('Top Opportunities', '当前机会');
-  String get noEvGaps =>
-      pick('No EV gaps above your threshold yet.', '暂时没有超过阈值的 EV Gap。');
-  String get popularMarkets => pick('Popular Markets', '热门市场');
-  String get settingsError => pick('Settings error', '设置读取失败');
-  String get opportunityError => pick('Opportunity error', '机会分析失败');
-  String get marketError => pick('Market error', '行情加载失败');
-  String get volume => pick('Vol', '成交');
+  String get topOpportunities => pick('Top Opportunities', '优先关注机会');
+  String get refresh => pick('Refresh', '刷新行情');
+  String get marketError => pick('Market load failed', '行情加载失败');
+  String get opportunityError => pick('Opportunity analysis failed', '机会分析失败');
+  String get volume => pick('Vol', '成交量');
   String get liquidity => pick('Liq', '流动性');
-  String get originalTitle => pick('Original', '原题');
+  String get originalTitle => pick('Original', '原始标题');
 
   String get analysisTitle => pick('EV Gap Analysis', 'EV Gap 分析');
-  String get refresh => pick('Refresh', '刷新行情');
   String get analysisDescription => pick(
-        'Fair probability is estimated by a local heuristic model using price, volume, liquidity, and spread. Replace it later with your own research model or an AI-backed backend.',
-        '这里的 fair probability 先用本地启发式模型估计：参考市场价格、成交量、流动性和价差。正式版可以替换成自己的研究模型或后端 AI 服务。',
+        'Fair probability currently uses a local heuristic based on price, volume, liquidity, and spread. Replace it with your own research model or an AI-backed backend when ready.',
+        '公允概率目前由本地启发式模型估算，综合了价格、成交量、流动性和价差。后续可替换为自己的研究模型或后端 AI 服务。',
       );
   String get noFilteredOpportunities => pick(
         'No opportunities pass your EV and liquidity filters.',
-        '当前没有通过 EV 和流动性过滤的机会。',
+        '当前没有通过 EV 与流动性筛选的机会。',
       );
-  String get analysisError => pick('Analysis error', '分析失败');
+  String get analysisError => pick('Analysis failed', '分析失败');
 
   String get smartMoneyTitle => pick('Smart Money Tracking', '聪明钱跟踪');
   String get smartMoneyDescription => pick(
-        'MVP uses mock wallet flow to demonstrate the follow-trading module. Replace it later with wallet, subgraph, CLOB, or custom indexer data.',
-        'MVP 先用模拟钱包流水，展示跟单模块的结构。后续可以替换成链上钱包、CLOB 成交或自建索引服务。',
+        'This module currently uses demonstrative wallet activity. It is structured so a wallet indexer, CLOB trades, or on-chain data source can replace the mock feed.',
+        '当前模块先展示模拟钱包活动；数据层已预留，可替换为钱包索引、CLOB 成交或链上数据源。',
       );
   String get size => pick('Size', '金额');
   String get winRate => pick('Win Rate', '胜率');
-  String get age => pick('Age', '距今');
-  String get smartMoneyError => pick('Smart money error', '聪明钱数据加载失败');
+  String get age => pick('Age', '时间');
+  String get smartMoneyError => pick('Smart money load failed', '聪明钱数据加载失败');
 
   String get settingsTitle => pick('Settings', '参数设置');
   String get language => pick('Language', '语言');
@@ -78,10 +61,10 @@ class AppText {
   String get minLiquidity => pick('Min Liquidity', '最低流动性');
   String get darkMode => pick('Dark Mode', '深色模式');
   String get apiKeyPlaceholder =>
-      pick('OpenAI API Key placeholder', 'OpenAI API Key（预留）');
+      pick('OpenAI API Key (optional)', 'OpenAI API Key（预留）');
   String get apiKeyHelper => pick(
-        'For production, proxy AI and trading keys through a backend. Do not hardcode secrets in the frontend.',
-        '正式版建议通过后端代理处理 AI 和交易密钥，前端不要硬编码。',
+        'Do not put production AI or trading secrets in the frontend. Use a backend proxy for sensitive operations.',
+        '不要把生产环境的 AI 或交易密钥放在前端。涉及敏感操作时请通过后端代理。',
       );
   String get saveSettings => pick('Save Settings', '保存设置');
   String get settingsSaved => pick('Settings saved', '设置已保存');
@@ -101,9 +84,10 @@ class AppText {
   String get spread => pick('Spread', '价差');
   String get close => pick('Close', '关闭');
   String get detailNote => pick(
-        'Adjust the fair probability to stress-test whether the opportunity still survives your risk settings.',
-        '调整公允概率可以做压力测试，观察该机会在你的风控参数下是否仍然成立。',
+        'Adjust fair probability to check whether an idea remains viable under your risk settings.',
+        '可以调整公允概率，检查机会在当前风控参数下是否仍然成立。',
       );
+
   String riskLabel(String value) {
     if (!zh) return value;
     return switch (value) {
@@ -117,9 +101,8 @@ class AppText {
   String marketQuestion(String value) {
     if (!zh) return value;
     final normalized = value.trim().replaceAll(RegExp(r'\s+'), ' ');
-    final exact = _marketQuestionZh[normalized.toLowerCase()];
-    if (exact != null) return exact;
-    return _translateCommonMarketTerms(normalized);
+    return _marketQuestionZh[normalized.toLowerCase()] ??
+        _translateCommonTerms(normalized);
   }
 
   String marketCategory(String value) {
@@ -127,15 +110,13 @@ class AppText {
     return _categoryZh[value.trim().toLowerCase()] ?? value;
   }
 
-  String _translateCommonMarketTerms(String value) {
-    var translated = value;
-    for (final entry in _commonMarketTermsZh.entries) {
-      translated = translated.replaceAll(
-        RegExp(entry.key, caseSensitive: false),
-        entry.value,
-      );
+  String _translateCommonTerms(String value) {
+    var result = value;
+    for (final entry in _commonTerms.entries) {
+      result = result.replaceAll(
+          RegExp(entry.key, caseSensitive: false), entry.value);
     }
-    return translated == value ? value : translated;
+    return result;
   }
 }
 
@@ -144,7 +125,8 @@ const _marketQuestionZh = <String, String>{
   'will btc close above \$100k before year end?': 'BTC 会在年底前收于 10 万美元上方吗？',
   'will candidate a win the national election?': '候选人 A 会赢得全国大选吗？',
   'will a frontier ai lab release a new flagship model in q3?':
-      '一线 AI 实验室会在第三季度发布新的旗舰模型吗？',
+      '前沿 AI 实验室会在第三季度发布新旗舰模型吗？',
+  'will team usa win the 2026 world cup?': '美国队会赢得 2026 年世界杯吗？',
 };
 
 const _categoryZh = <String, String>{
@@ -157,23 +139,16 @@ const _categoryZh = <String, String>{
   'business': '商业',
   'elections': '选举',
   'culture': '文化',
-  '综合': '综合',
 };
 
-const _commonMarketTermsZh = <String, String>{
-  r'\bWill\b': '是否',
-  r'\bFed\b': '美联储',
+const _commonTerms = <String, String>{
+  r'\bwill\b': '是否',
+  r'\bfed\b': '美联储',
   r'\brates\b': '利率',
-  r'\bFOMC\b': 'FOMC',
-  r'\bBTC\b': 'BTC',
-  r'\bBitcoin\b': '比特币',
-  r'\bEthereum\b': '以太坊',
-  r'\bETH\b': 'ETH',
-  r'\bTrump\b': '特朗普',
-  r'\bBiden\b': '拜登',
+  r'\bbitcoin\b': '比特币',
+  r'\bethereum\b': '以太坊',
   r'\belection\b': '选举',
-  r'\bnational\b': '全国',
-  r'\bAI\b': 'AI',
+  r'\bai\b': 'AI',
   r'\bmodel\b': '模型',
   r'\brelease\b': '发布',
   r'\babove\b': '高于',
@@ -183,8 +158,4 @@ const _commonMarketTermsZh = <String, String>{
   r'\bwin\b': '获胜',
   r'\bclose\b': '收盘',
   r'\byear end\b': '年底',
-  r'\bin Q1\b': '在第一季度',
-  r'\bin Q2\b': '在第二季度',
-  r'\bin Q3\b': '在第三季度',
-  r'\bin Q4\b': '在第四季度',
 };

@@ -24,12 +24,11 @@ class AnalysisPage extends ConsumerWidget {
         Row(
           children: [
             Expanded(
-              child: Text(
-                text.analysisTitle,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-              ),
+              child: Text(text.analysisTitle,
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineSmall
+                      ?.copyWith(fontWeight: FontWeight.w800)),
             ),
             IconButton(
               tooltip: text.refresh,
@@ -45,11 +44,12 @@ class AnalysisPage extends ConsumerWidget {
         const SizedBox(height: 8),
         Text(
           zh
-              ? '按 EV Gap、流动性、价差和临近结束时间筛选。真实执行前仍需检查盘口深度、费用和成交概率。'
+              ? '按 EV Gap、流动性、价差与临近结束时间筛选。真实执行前仍需要检查订单簿深度、费用和成交概率。'
               : text.analysisDescription,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+          style: Theme.of(context)
+              .textTheme
+              .bodyMedium
+              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 16),
         Card(
@@ -62,17 +62,14 @@ class AnalysisPage extends ConsumerWidget {
               children: [
                 Chip(
                   avatar: const Icon(Icons.filter_alt_outlined, size: 18),
-                  label: Text(
-                    zh
-                        ? '结果 ${filtered.length}'
-                        : '${filtered.length} results',
-                  ),
+                  label: Text(zh
+                      ? '结果 ${filtered.length}'
+                      : '${filtered.length} results'),
                 ),
                 FilterChip(
                   selected: filter.watchlistOnly,
-                  onSelected: ref
-                      .read(marketFilterProvider.notifier)
-                      .setWatchlistOnly,
+                  onSelected:
+                      ref.read(marketFilterProvider.notifier).setWatchlistOnly,
                   label: Text(zh ? '只看关注' : 'Watchlist'),
                 ),
                 for (final sort in MarketSortMode.values)
@@ -89,30 +86,23 @@ class AnalysisPage extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
         opportunities.when(
-          data: (items) {
-            if (filtered.isEmpty) {
-              return Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: Text(zh
-                      ? '当前没有符合条件的机会。可以到设置页降低 EV 阈值或最低流动性。'
-                      : text.noFilteredOpportunities),
-                ),
-              );
-            }
-            return Column(
-              children: [
-                for (final opportunity in filtered)
-                  OpportunityCard(opportunity: opportunity),
-              ],
-            );
-          },
+          data: (_) => filtered.isEmpty
+              ? Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Text(zh
+                        ? '当前没有符合条件的机会。可在设置页下调 EV 阈值或最低流动性。'
+                        : text.noFilteredOpportunities),
+                  ),
+                )
+              : Column(children: [
+                  for (final opportunity in filtered)
+                    OpportunityCard(opportunity: opportunity)
+                ]),
           loading: () => const Center(
-            child: Padding(
-              padding: EdgeInsets.all(32),
-              child: CircularProgressIndicator(),
-            ),
-          ),
+              child: Padding(
+                  padding: EdgeInsets.all(32),
+                  child: CircularProgressIndicator())),
           error: (error, _) => Text('${text.analysisError}: $error'),
         ),
       ],

@@ -57,6 +57,57 @@ class PolymarketRepository {
     return mockSmartMoneySignals;
   }
 
+  Future<List<PricePoint>> fetchPriceHistory(Market market) async {
+    final tokenId = market.yesTokenId;
+    if (tokenId == null || tokenId.isEmpty) return const [];
+
+    final now = DateTime.now().toUtc();
+    final start = now.subtract(const Duration(days: 7));
+    final query = {
+      'market': tokenId,
+      'startTs': '${start.millisecondsSinceEpoch ~/ 1000}',
+      'endTs': '${now.millisecondsSinceEpoch ~/ 1000}',
+      'interval': '1h',
+      'fidelity': '60',
+    };
+
+    final uri = kIsWeb
+        ? Uri(path: '/api/polymarket/prices-history', queryParameters: query)
+        : Uri.https('clob.polymarket.com', '/prices-history', query);
+    try {
+      final response =
+          await _client.get(uri).timeout(const Duration(seconds: 8));
+      if (response.statusCode != 200) return const [];
+      final decoded = jsonDecode(response.body);
+      final history =
+          decoded is Map<String, dynamic> ? decoded['history'] : null;
+      if (history is! List) return const [];
+      return history
+          .whereType<Map<String, dynamic>>()
+          .map((point) {
+            final timestamp = point['t'];
+            final price = point['p'];
+            final seconds = timestamp is num
+                ? timestamp.toInt()
+                : int.tryParse('$timestamp') ?? 0;
+            final value = price is num
+                ? price.toDouble()
+                : double.tryParse('$price') ?? -1;
+            return PricePoint(
+              timestamp: DateTime.fromMillisecondsSinceEpoch(seconds * 1000,
+                      isUtc: true)
+                  .toLocal(),
+              price: value,
+            );
+          })
+          .where((point) => point.price >= 0 && point.price <= 1)
+          .toList()
+        ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    } catch (_) {
+      return const [];
+    }
+  }
+
   static final mockMarkets = <Market>[
     Market(
       id: 'mvp-fed-cut',
@@ -129,7 +180,8 @@ class PolymarketRepository {
     ),
     Market(
       id: 'mvp-ai-agent',
-      question: 'Will an AI agent complete a Fortune 500 workflow autonomously in 2026?',
+      question:
+          'Will an AI agent complete a Fortune 500 workflow autonomously in 2026?',
       category: 'Technology',
       yesPrice: 0.36,
       noPrice: 0.66,
@@ -137,7 +189,8 @@ class PolymarketRepository {
       liquidityUsd: 64000,
       spread: 0.024,
       endDate: DateTime(2026, 12, 31),
-      slug: 'will-an-ai-agent-complete-a-fortune-500-workflow-autonomously-in-2026',
+      slug:
+          'will-an-ai-agent-complete-a-fortune-500-workflow-autonomously-in-2026',
     ),
   ];
 

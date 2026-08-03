@@ -15,12 +15,9 @@ class AiAnalysisService {
     Map<String, double> fairProbabilities = const {},
   }) {
     final opportunities = <Opportunity>[];
-
     for (final market in markets) {
       final fairYes =
           fairProbabilities[market.id] ?? estimateFairProbability(market);
-      final fairNo = 1 - fairYes;
-
       opportunities.addAll([
         _buildOpportunity(
           market: market,
@@ -32,13 +29,12 @@ class AiAnalysisService {
         _buildOpportunity(
           market: market,
           side: TradeSide.no,
-          fairProbability: fairNo,
+          fairProbability: 1 - fairYes,
           impliedProbability: market.impliedNoProbability,
           settings: settings,
         ),
       ]);
     }
-
     return opportunities
         .where((item) =>
             item.evGap >= settings.evAlertThreshold &&
@@ -57,8 +53,10 @@ class AiAnalysisService {
         (market.liquidityUsd / 100000).clamp(0, 0.08).toDouble();
     final volumeSignal = (market.volumeUsd / 1000000).clamp(0, 0.05).toDouble();
     final spreadPenalty = market.spread.clamp(0, 0.08).toDouble();
-    final base = market.impliedYesProbability;
-    return (base + liquiditySignal + volumeSignal - spreadPenalty)
+    return (market.impliedYesProbability +
+            liquiditySignal +
+            volumeSignal -
+            spreadPenalty)
         .clamp(0.03, 0.97)
         .toDouble();
   }
@@ -89,15 +87,13 @@ class AiAnalysisService {
   }) {
     final price = side == TradeSide.yes ? market.yesPrice : market.noPrice;
     final evGap = fairProbability - impliedProbability;
-    final correlationPenalty =
-        market.category.toLowerCase().contains('politic') ? 0.15 : 0.05;
     final position = _riskService.recommendStake(
       price: price,
       fairProbability: fairProbability,
       settings: settings,
-      correlationPenalty: correlationPenalty,
+      correlationPenalty:
+          market.category.toLowerCase().contains('politic') ? 0.15 : 0.05,
     );
-
     return Opportunity(
       market: market,
       side: side,
@@ -128,19 +124,16 @@ class AiAnalysisService {
     final sideText = side == TradeSide.yes ? 'YES' : 'NO';
     final zh = languageCode == 'zh';
     final liquidityNote = market.liquidityUsd >= 10000
-        ? zh
-            ? '当前流动性足够支撑 MVP 级别仓位估算'
-            : 'liquidity is acceptable for MVP sizing'
-        : zh
-            ? '当前流动性偏薄，真实交易只能使用限价单'
-            : 'liquidity is thin; use limit orders only';
-
+        ? (zh
+            ? '当前流动性可以支持保守的仓位估算'
+            : 'liquidity is acceptable for conservative sizing')
+        : (zh
+            ? '当前流动性偏薄，真实交易应只使用限价单'
+            : 'liquidity is thin; use limit orders only');
     if (zh) {
-      return '买入 $sideText 的 EV Gap 为 ${(evGap * 100).toStringAsFixed(1)}%；'
-          '$liquidityNote。${position.warning}';
+      return '方向 $sideText 的 EV Gap 为 ${(evGap * 100).toStringAsFixed(1)}%；$liquidityNote。${position.warning}';
     }
-    return '$sideText shows a ${(evGap * 100).toStringAsFixed(1)}% EV gap; '
-        '$liquidityNote. ${position.warning}';
+    return '$sideText shows a ${(evGap * 100).toStringAsFixed(1)}% EV gap; $liquidityNote. ${position.warning}';
   }
 
   double _confidenceFor(Market market, double evGap) {
@@ -157,7 +150,9 @@ class AiAnalysisService {
     if (market.liquidityUsd < 5000 || market.spread > 0.08) {
       return RiskLevel.high;
     }
-    if (evGap > 0.08 && market.liquidityUsd > 25000) return RiskLevel.low;
+    if (evGap > 0.08 && market.liquidityUsd > 25000) {
+      return RiskLevel.low;
+    }
     return RiskLevel.medium;
   }
 }

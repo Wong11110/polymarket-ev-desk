@@ -16,13 +16,14 @@ class HomePage extends ConsumerWidget {
     final marketsAsync = ref.watch(marketsProvider);
     final opportunitiesAsync = ref.watch(opportunitiesProvider);
     final filteredOpportunities = ref.watch(filteredOpportunitiesProvider);
+    final filteredMarkets = ref.watch(filteredMarketsProvider);
     final settings = ref.watch(settingsControllerProvider);
-    final watchlist = ref.watch(watchlistProvider).valueOrNull ?? const <String>{};
+    final watchlist =
+        ref.watch(watchlistProvider).valueOrNull ?? const <String>{};
     final languageCode = settings.valueOrNull?.languageCode ?? 'en';
     final text = AppText(languageCode);
     final zh = languageCode == 'zh';
     final markets = marketsAsync.valueOrNull ?? const [];
-    final topMarkets = filteredOpportunities.map((item) => item.market).toList();
     final updatedAt = DateFormat('HH:mm:ss').format(DateTime.now());
 
     return RefreshIndicator(
@@ -40,19 +41,19 @@ class HomePage extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      text.dashboardTitle,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w900,
-                          ),
-                    ),
+                    Text(text.dashboardTitle,
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.w900)),
                     const SizedBox(height: 4),
                     Text(
                       zh
-                          ? '热门预测市场、EV Gap、流动性和仓位建议'
+                          ? '热门市场、EV Gap、流动性与 Kelly 仓位建议'
                           : 'Markets, EV gaps, liquidity, and Kelly sizing',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                     ),
                   ],
@@ -84,21 +85,17 @@ class HomePage extends ConsumerWidget {
             childAspectRatio: 1.95,
             children: [
               MetricTile(
-                label: zh ? '市场数' : 'Markets',
-                value: '${markets.length}',
-              ),
+                  label: zh ? '市场数' : 'Markets', value: '${markets.length}'),
               MetricTile(
-                label: zh ? '机会数' : 'Signals',
-                value: '${filteredOpportunities.length}',
-              ),
+                  label: zh ? '信号数' : 'Signals',
+                  value: '${filteredOpportunities.length}'),
               MetricTile(
-                label: zh ? '关注' : 'Watchlist',
-                value: '${watchlist.length}',
-              ),
+                  label: zh ? '关注' : 'Watchlist', value: '${watchlist.length}'),
               settings.when(
                 data: (value) => MetricTile(
                   label: text.evAlert,
-                  value: '${(value.evAlertThreshold * 100).toStringAsFixed(1)}%',
+                  value:
+                      '${(value.evAlertThreshold * 100).toStringAsFixed(1)}%',
                 ),
                 loading: () => const MetricTile(label: 'EV', value: '...'),
                 error: (_, __) => const MetricTile(label: 'EV', value: '--'),
@@ -108,18 +105,16 @@ class HomePage extends ConsumerWidget {
           const SizedBox(height: 16),
           _FilterPanel(zh: zh),
           const SizedBox(height: 18),
-          Text(
-            text.topOpportunities,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text(text.topOpportunities,
+              style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 10),
           opportunitiesAsync.when(
             data: (_) => filteredOpportunities.isEmpty
                 ? _EmptyState(
                     title: zh ? '暂无满足条件的机会' : 'No matching signals',
                     body: zh
-                        ? '可以降低 EV 阈值、切换分类，或关闭“只看关注”。'
-                        : 'Try lowering the EV threshold, changing category, or disabling watchlist-only.',
+                        ? '可在设置中下调 EV 阈值，或更改筛选条件。'
+                        : 'Try lowering the EV threshold or changing filters.',
                   )
                 : Column(
                     children: filteredOpportunities
@@ -129,38 +124,28 @@ class HomePage extends ConsumerWidget {
                   ),
             loading: () => const Center(
               child: Padding(
-                padding: EdgeInsets.all(24),
-                child: CircularProgressIndicator(),
-              ),
+                  padding: EdgeInsets.all(24),
+                  child: CircularProgressIndicator()),
             ),
             error: (error, _) => Text('${text.opportunityError}: $error'),
           ),
           const SizedBox(height: 14),
-          Text(
-            zh ? '市场雷达' : 'Market Radar',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text(zh ? '市场雷达' : 'Market Radar',
+              style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 10),
           marketsAsync.when(
-            data: (_) {
-              final marketIds = <String>{};
-              final uniqueMarkets = [
-                for (final market in topMarkets)
-                  if (marketIds.add(market.id)) market,
-              ];
-              if (uniqueMarkets.isEmpty) {
-                return _EmptyState(
-                  title: zh ? '筛选后没有市场' : 'No markets after filters',
-                  body: zh ? '请调整搜索关键词或分类。' : 'Adjust search or category.',
-                );
-              }
-              return Column(
-                children: uniqueMarkets
-                    .take(12)
-                    .map((market) => MarketCard(market: market))
-                    .toList(),
-              );
-            },
+            data: (_) => filteredMarkets.isEmpty
+                ? _EmptyState(
+                    title: zh ? '筛选后没有市场' : 'No markets after filters',
+                    body: zh
+                        ? '请调整搜索关键词、分类或关注筛选。'
+                        : 'Adjust search, category, or watchlist filter.',
+                  )
+                : Column(
+                    children: filteredMarkets
+                        .take(20)
+                        .map((market) => MarketCard(market: market))
+                        .toList()),
             loading: () => const LinearProgressIndicator(),
             error: (error, _) => Text('${text.marketError}: $error'),
           ),
@@ -172,7 +157,6 @@ class HomePage extends ConsumerWidget {
 
 class _FilterPanel extends ConsumerWidget {
   const _FilterPanel({required this.zh});
-
   final bool zh;
 
   @override
@@ -189,7 +173,8 @@ class _FilterPanel extends ConsumerWidget {
             TextField(
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.search),
-                hintText: zh ? '搜索市场、主题或关键词' : 'Search markets, topics, keywords',
+                hintText:
+                    zh ? '搜索市场、主题或关键词' : 'Search markets, topics, keywords',
                 isDense: true,
               ),
               onChanged: controller.setQuery,
@@ -203,16 +188,15 @@ class _FilterPanel extends ConsumerWidget {
                         ? filter.category
                         : 'All',
                     decoration: InputDecoration(
-                      labelText: zh ? '分类' : 'Category',
-                      isDense: true,
-                    ),
+                        labelText: zh ? '分类' : 'Category', isDense: true),
                     items: [
                       for (final category in categories)
                         DropdownMenuItem(
                           value: category,
                           child: Text(category == 'All'
                               ? (zh ? '全部' : 'All')
-                              : category),
+                              : AppText(zh ? 'zh' : 'en')
+                                  .marketCategory(category)),
                         ),
                     ],
                     onChanged: (value) {
@@ -225,30 +209,23 @@ class _FilterPanel extends ConsumerWidget {
                   child: DropdownButtonFormField<MarketSortMode>(
                     initialValue: filter.sortMode,
                     decoration: InputDecoration(
-                      labelText: zh ? '排序' : 'Sort',
-                      isDense: true,
-                    ),
+                        labelText: zh ? '排序' : 'Sort', isDense: true),
                     items: [
                       DropdownMenuItem(
-                        value: MarketSortMode.evGap,
-                        child: Text(zh ? 'EV Gap' : 'EV Gap'),
-                      ),
+                          value: MarketSortMode.evGap,
+                          child: Text(zh ? '热门优先' : 'Popular')),
                       DropdownMenuItem(
-                        value: MarketSortMode.volume,
-                        child: Text(zh ? '成交量' : 'Volume'),
-                      ),
+                          value: MarketSortMode.volume,
+                          child: Text(zh ? '成交量' : 'Volume')),
                       DropdownMenuItem(
-                        value: MarketSortMode.liquidity,
-                        child: Text(zh ? '流动性' : 'Liquidity'),
-                      ),
+                          value: MarketSortMode.liquidity,
+                          child: Text(zh ? '流动性' : 'Liquidity')),
                       DropdownMenuItem(
-                        value: MarketSortMode.spread,
-                        child: Text(zh ? '低价差' : 'Tight spread'),
-                      ),
+                          value: MarketSortMode.spread,
+                          child: Text(zh ? '低价差' : 'Tight spread')),
                       DropdownMenuItem(
-                        value: MarketSortMode.endingSoon,
-                        child: Text(zh ? '临近结束' : 'Ending soon'),
-                      ),
+                          value: MarketSortMode.endingSoon,
+                          child: Text(zh ? '临近结束' : 'Ending soon')),
                     ],
                     onChanged: (value) {
                       if (value != null) controller.setSortMode(value);
@@ -271,12 +248,8 @@ class _FilterPanel extends ConsumerWidget {
 }
 
 class _DataBanner extends StatelessWidget {
-  const _DataBanner({
-    required this.isLoading,
-    required this.updatedAt,
-    required this.zh,
-  });
-
+  const _DataBanner(
+      {required this.isLoading, required this.updatedAt, required this.zh});
   final bool isLoading;
   final String updatedAt;
   final bool zh;
@@ -285,7 +258,10 @@ class _DataBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.28),
+        color: Theme.of(context)
+            .colorScheme
+            .primaryContainer
+            .withValues(alpha: 0.28),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
@@ -297,7 +273,7 @@ class _DataBanner extends StatelessWidget {
             Expanded(
               child: Text(
                 zh
-                    ? 'Gamma API 准实时轮询；EV、流动性和仓位在本地重算。更新时间 $updatedAt'
+                    ? 'Gamma API 准实时轮询；EV、流动性和仓位建议会本地重算。更新时间 $updatedAt'
                     : 'Gamma API polling; EV, liquidity and sizing are recalculated locally. Updated $updatedAt',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
@@ -311,7 +287,6 @@ class _DataBanner extends StatelessWidget {
 
 class _EmptyState extends StatelessWidget {
   const _EmptyState({required this.title, required this.body});
-
   final String title;
   final String body;
 

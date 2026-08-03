@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:polymarket_ev_mvp/l10n/app_text.dart';
 
 void main() {
-  test('localizes known mock market questions in Chinese mode', () {
+  test('localizes known market questions in Chinese mode', () {
     const text = AppText('zh');
 
     expect(

@@ -63,7 +63,8 @@ class MarketFilterController extends Notifier<MarketFilterState> {
 
   void setQuery(String value) => state = state.copyWith(query: value);
   void setCategory(String value) => state = state.copyWith(category: value);
-  void setSortMode(MarketSortMode value) => state = state.copyWith(sortMode: value);
+  void setSortMode(MarketSortMode value) =>
+      state = state.copyWith(sortMode: value);
   void setWatchlistOnly(bool value) =>
       state = state.copyWith(watchlistOnly: value);
 }
@@ -181,7 +182,47 @@ final marketsProvider = StreamProvider.autoDispose<List<Market>>((ref) async* {
 
 final marketCategoriesProvider = Provider<List<String>>((ref) {
   final markets = ref.watch(marketsProvider).valueOrNull ?? const <Market>[];
-  return ['All', ...{for (final market in markets) market.category}];
+  return [
+    'All',
+    ...{for (final market in markets) market.category}
+  ];
+});
+
+final filteredMarketsProvider = Provider<List<Market>>((ref) {
+  final markets = ref.watch(marketsProvider).valueOrNull ?? const <Market>[];
+  final filter = ref.watch(marketFilterProvider);
+  final watchlist =
+      ref.watch(watchlistProvider).valueOrNull ?? const <String>{};
+  final query = filter.query.trim().toLowerCase();
+  final filtered = markets.where((market) {
+    if (filter.watchlistOnly && !watchlist.contains(market.id)) {
+      return false;
+    }
+    if (filter.category != 'All' && market.category != filter.category) {
+      return false;
+    }
+    if (query.isEmpty) {
+      return true;
+    }
+    return market.question.toLowerCase().contains(query) ||
+        market.category.toLowerCase().contains(query);
+  }).toList();
+
+  filtered.sort((a, b) {
+    return switch (filter.sortMode) {
+      MarketSortMode.evGap => b.volumeUsd.compareTo(a.volumeUsd),
+      MarketSortMode.volume => b.volumeUsd.compareTo(a.volumeUsd),
+      MarketSortMode.liquidity => b.liquidityUsd.compareTo(a.liquidityUsd),
+      MarketSortMode.spread => a.spread.compareTo(b.spread),
+      MarketSortMode.endingSoon => a.endDate.compareTo(b.endDate),
+    };
+  });
+  return filtered;
+});
+
+final marketPriceHistoryProvider =
+    FutureProvider.autoDispose.family<List<PricePoint>, Market>((ref, market) {
+  return ref.watch(polymarketRepositoryProvider).fetchPriceHistory(market);
 });
 
 final smartMoneyProvider = FutureProvider<List<SmartMoneySignal>>((ref) async {
@@ -208,12 +249,15 @@ final filteredOpportunitiesProvider = Provider<List<Opportunity>>((ref) {
   final opportunities =
       ref.watch(opportunitiesProvider).valueOrNull ?? const <Opportunity>[];
   final filter = ref.watch(marketFilterProvider);
-  final watchlist = ref.watch(watchlistProvider).valueOrNull ?? const <String>{};
+  final watchlist =
+      ref.watch(watchlistProvider).valueOrNull ?? const <String>{};
   final query = filter.query.trim().toLowerCase();
 
   final filtered = opportunities.where((item) {
     final market = item.market;
-    if (filter.watchlistOnly && !watchlist.contains(market.id)) return false;
+    if (filter.watchlistOnly && !watchlist.contains(market.id)) {
+      return false;
+    }
     if (filter.category != 'All' && market.category != filter.category) {
       return false;
     }
@@ -225,8 +269,7 @@ final filteredOpportunitiesProvider = Provider<List<Opportunity>>((ref) {
   filtered.sort((a, b) {
     return switch (filter.sortMode) {
       MarketSortMode.evGap => b.evGap.compareTo(a.evGap),
-      MarketSortMode.volume =>
-        b.market.volumeUsd.compareTo(a.market.volumeUsd),
+      MarketSortMode.volume => b.market.volumeUsd.compareTo(a.market.volumeUsd),
       MarketSortMode.liquidity =>
         b.market.liquidityUsd.compareTo(a.market.liquidityUsd),
       MarketSortMode.spread => a.market.spread.compareTo(b.market.spread),

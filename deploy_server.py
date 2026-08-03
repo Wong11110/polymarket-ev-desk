@@ -11,6 +11,7 @@ from urllib.request import Request, urlopen
 
 
 GAMMA_EVENTS_URL = "https://gamma-api.polymarket.com/events"
+CLOB_PRICE_HISTORY_URL = "https://clob.polymarket.com/prices-history"
 
 
 class AppHandler(SimpleHTTPRequestHandler):
@@ -29,7 +30,10 @@ class AppHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self) -> None:
         if self.path.startswith("/api/polymarket/events"):
-            self._proxy_polymarket_events()
+            self._proxy_json(GAMMA_EVENTS_URL)
+            return
+        if self.path.startswith("/api/polymarket/prices-history"):
+            self._proxy_json(CLOB_PRICE_HISTORY_URL)
             return
         super().do_GET()
 
@@ -40,9 +44,9 @@ class AppHandler(SimpleHTTPRequestHandler):
             return str(candidate)
         return str(self.web_root / "index.html")
 
-    def _proxy_polymarket_events(self) -> None:
+    def _proxy_json(self, base_url: str) -> None:
         query = urlparse(self.path).query
-        upstream = f"{GAMMA_EVENTS_URL}?{query}" if query else GAMMA_EVENTS_URL
+        upstream = f"{base_url}?{query}" if query else base_url
         request = Request(
             upstream,
             headers={

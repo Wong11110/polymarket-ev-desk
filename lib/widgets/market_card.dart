@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_text.dart';
 import '../models/market.dart';
 import '../state/app_providers.dart';
+import 'price_history_chart.dart';
 
 class MarketCard extends ConsumerWidget {
   const MarketCard({super.key, required this.market, this.compact = false});
@@ -18,11 +19,11 @@ class MarketCard extends ConsumerWidget {
     final languageCode =
         ref.watch(settingsControllerProvider).valueOrNull?.languageCode ?? 'en';
     final text = AppText(languageCode);
-    final watchlist = ref.watch(watchlistProvider).valueOrNull ?? const <String>{};
+    final watchlist =
+        ref.watch(watchlistProvider).valueOrNull ?? const <String>{};
     final isSaved = watchlist.contains(market.id);
     final currency = NumberFormat.compactCurrency(symbol: r'$');
     final date = DateFormat.MMMd().format(market.endDate);
-    final title = text.marketQuestion(market.question);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -49,7 +50,7 @@ class MarketCard extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          title,
+                          text.marketQuestion(market.question),
                           maxLines: compact ? 2 : 3,
                           overflow: TextOverflow.ellipsis,
                           style:
@@ -64,9 +65,11 @@ class MarketCard extends ConsumerWidget {
                           children: [
                             _Tag(text.marketCategory(market.category)),
                             if (market.isBinaryArbCandidate)
-                              _Tag(languageCode == 'zh' ? '价差候选' : 'Arb watch'),
+                              _Tag(languageCode == 'zh' ? '价差观察' : 'Arb watch'),
                             if (market.isEndingSoon)
-                              _Tag(languageCode == 'zh' ? '临近结束' : 'Ending soon'),
+                              _Tag(languageCode == 'zh'
+                                  ? '临近结束'
+                                  : 'Ending soon'),
                           ],
                         ),
                       ],
@@ -74,7 +77,7 @@ class MarketCard extends ConsumerWidget {
                   ),
                   IconButton(
                     tooltip: isSaved
-                        ? (languageCode == 'zh' ? '取消收藏' : 'Remove watch')
+                        ? (languageCode == 'zh' ? '取消关注' : 'Remove watch')
                         : (languageCode == 'zh' ? '加入关注' : 'Add watch'),
                     onPressed: () =>
                         ref.read(watchlistProvider.notifier).toggle(market.id),
@@ -107,13 +110,17 @@ class MarketCard extends ConsumerWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _Metric(label: text.volume, value: currency.format(market.volumeUsd)),
                   _Metric(
-                    label: text.liquidity,
-                    value: currency.format(market.liquidityUsd),
-                  ),
-                  _Metric(label: text.spread, value: market.spread.toStringAsFixed(3)),
-                  _Metric(label: languageCode == 'zh' ? '结束' : 'Ends', value: date),
+                      label: text.volume,
+                      value: currency.format(market.volumeUsd)),
+                  _Metric(
+                      label: text.liquidity,
+                      value: currency.format(market.liquidityUsd)),
+                  _Metric(
+                      label: text.spread,
+                      value: market.spread.toStringAsFixed(3)),
+                  _Metric(
+                      label: languageCode == 'zh' ? '结束' : 'Ends', value: date),
                 ],
               ),
               const SizedBox(height: 10),
@@ -121,7 +128,9 @@ class MarketCard extends ConsumerWidget {
                 children: [
                   Expanded(child: _LiquidityBar(score: market.liquidityScore)),
                   IconButton(
-                    tooltip: languageCode == 'zh' ? '打开 Polymarket' : 'Open Polymarket',
+                    tooltip: languageCode == 'zh'
+                        ? '打开 Polymarket'
+                        : 'Open Polymarket',
                     onPressed: () => launchUrl(
                       Uri.parse(market.polymarketUrl),
                       mode: LaunchMode.externalApplication,
@@ -149,6 +158,7 @@ class MarketDetailSheet extends ConsumerWidget {
         ref.watch(settingsControllerProvider).valueOrNull?.languageCode ?? 'en';
     final text = AppText(languageCode);
     final currency = NumberFormat.compactCurrency(symbol: r'$');
+    final history = ref.watch(marketPriceHistoryProvider(market));
 
     return SafeArea(
       child: Padding(
@@ -165,10 +175,8 @@ class MarketDetailSheet extends ConsumerWidget {
                     ),
               ),
               const SizedBox(height: 10),
-              Text(
-                text.marketQuestion(market.question),
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              Text(text.marketQuestion(market.question),
+                  style: Theme.of(context).textTheme.titleMedium),
               if (languageCode == 'zh') ...[
                 const SizedBox(height: 6),
                 Text(
@@ -183,39 +191,65 @@ class MarketDetailSheet extends ConsumerWidget {
                 spacing: 10,
                 runSpacing: 10,
                 children: [
-                  _Metric(label: 'YES', value: market.yesPrice.toStringAsFixed(3)),
-                  _Metric(label: 'NO', value: market.noPrice.toStringAsFixed(3)),
-                  _Metric(label: 'YES+NO', value: market.noVigSum.toStringAsFixed(3)),
-                  _Metric(label: text.volumeFull, value: currency.format(market.volumeUsd)),
-                  _Metric(label: text.liquidityFull, value: currency.format(market.liquidityUsd)),
-                  _Metric(label: text.spread, value: market.spread.toStringAsFixed(3)),
+                  _Metric(
+                      label: 'YES', value: market.yesPrice.toStringAsFixed(3)),
+                  _Metric(
+                      label: 'NO', value: market.noPrice.toStringAsFixed(3)),
+                  _Metric(
+                      label: 'YES+NO',
+                      value: market.noVigSum.toStringAsFixed(3)),
+                  _Metric(
+                      label: text.volumeFull,
+                      value: currency.format(market.volumeUsd)),
+                  _Metric(
+                      label: text.liquidityFull,
+                      value: currency.format(market.liquidityUsd)),
+                  _Metric(
+                      label: text.spread,
+                      value: market.spread.toStringAsFixed(3)),
                   if (market.bestBid != null)
-                    _Metric(label: 'Best bid', value: market.bestBid!.toStringAsFixed(3)),
+                    _Metric(
+                        label: 'Best bid',
+                        value: market.bestBid!.toStringAsFixed(3)),
                   if (market.bestAsk != null)
-                    _Metric(label: 'Best ask', value: market.bestAsk!.toStringAsFixed(3)),
+                    _Metric(
+                        label: 'Best ask',
+                        value: market.bestAsk!.toStringAsFixed(3)),
                 ],
+              ),
+              const SizedBox(height: 14),
+              history.when(
+                data: (points) => PriceHistoryChart(
+                  points: points,
+                  languageCode: languageCode,
+                ),
+                loading: () => const SizedBox(
+                  height: 156,
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+                error: (_, __) => PriceHistoryChart(
+                  points: const [],
+                  languageCode: languageCode,
+                ),
               ),
               const SizedBox(height: 14),
               Text(
                 languageCode == 'zh'
-                    ? '执行提示：真实套利需要盘口深度、手续费、滑点、成交概率和提款/桥接成本。这里默认只做机会发现和风控提示，不自动下单。'
+                    ? '执行提示：真实套利还需要核验订单簿深度、手续费、滑点、成交概率与资金成本。此应用默认只做机会发现和风控提示，不会自动下单。'
                     : 'Execution note: real arbitrage needs order-book depth, fees, slippage, fill probability, and withdrawal/bridge cost checks. This app is discovery and risk analysis only.',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: () => launchUrl(
-                        Uri.parse(market.polymarketUrl),
-                        mode: LaunchMode.externalApplication,
-                      ),
-                      icon: const Icon(Icons.open_in_new),
-                      label: Text(languageCode == 'zh' ? '打开原市场' : 'Open market'),
-                    ),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => launchUrl(
+                    Uri.parse(market.polymarketUrl),
+                    mode: LaunchMode.externalApplication,
                   ),
-                ],
+                  icon: const Icon(Icons.open_in_new),
+                  label: Text(languageCode == 'zh' ? '打开原市场' : 'Open market'),
+                ),
               ),
             ],
           ),
@@ -241,20 +275,19 @@ class _MarketIcon extends StatelessWidget {
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         child: imageUrl == null || imageUrl.isEmpty
             ? const Icon(Icons.query_stats)
-            : Image.network(imageUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) {
-                return const Icon(Icons.query_stats);
-              }),
+            : Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const Icon(Icons.query_stats),
+              ),
       ),
     );
   }
 }
 
 class _PriceBox extends StatelessWidget {
-  const _PriceBox({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
+  const _PriceBox(
+      {required this.label, required this.value, required this.color});
 
   final String label;
   final double value;
@@ -274,12 +307,11 @@ class _PriceBox extends StatelessWidget {
           children: [
             Text(label, style: Theme.of(context).textTheme.labelLarge),
             const Spacer(),
-            Text(
-              value.toStringAsFixed(2),
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
-            ),
+            Text(value.toStringAsFixed(2),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w900)),
           ],
         ),
       ),
@@ -310,7 +342,6 @@ class _Metric extends StatelessWidget {
 
 class _Tag extends StatelessWidget {
   const _Tag(this.value);
-
   final String value;
 
   @override
@@ -330,7 +361,6 @@ class _Tag extends StatelessWidget {
 
 class _LiquidityBar extends StatelessWidget {
   const _LiquidityBar({required this.score});
-
   final double score;
 
   @override
