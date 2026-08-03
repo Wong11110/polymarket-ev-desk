@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'l10n/app_text.dart';
 import 'pages/analysis_page.dart';
 import 'pages/home_page.dart';
+import 'pages/portfolio_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/smart_money_page.dart';
 import 'state/app_providers.dart';
@@ -69,6 +70,7 @@ class _AppShellState extends ConsumerState<AppShell> {
     HomePage(),
     AnalysisPage(),
     SmartMoneyPage(),
+    PortfolioPage(),
     SettingsPage(),
   ];
 
@@ -113,6 +115,10 @@ class _AppShellState extends ConsumerState<AppShell> {
           NavigationDestination(
             icon: const Icon(Icons.account_balance_wallet_outlined),
             label: text.smartMoney,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.pie_chart_outline),
+            label: languageCode == 'zh' ? '模拟组合' : 'Portfolio',
           ),
           NavigationDestination(
               icon: const Icon(Icons.settings_outlined), label: text.settings),

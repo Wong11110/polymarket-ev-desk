@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../l10n/app_text.dart';
 import '../models/market.dart';
+import '../models/paper_position.dart';
 import '../state/app_providers.dart';
 import 'price_history_chart.dart';
 
@@ -152,6 +153,15 @@ class MarketDetailSheet extends ConsumerWidget {
 
   final Market market;
 
+  void _openPaperTrade(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => _PaperTradeSheet(market: market),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final languageCode =
@@ -243,6 +253,15 @@ class MarketDetailSheet extends ConsumerWidget {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
+                  onPressed: () => _openPaperTrade(context),
+                  icon: const Icon(Icons.add_chart_outlined),
+                  label: Text(languageCode == 'zh' ? '创建模拟仓位' : 'Paper trade'),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
                   onPressed: () => launchUrl(
                     Uri.parse(market.polymarketUrl),
                     mode: LaunchMode.externalApplication,
@@ -253,6 +272,109 @@ class MarketDetailSheet extends ConsumerWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PaperTradeSheet extends ConsumerStatefulWidget {
+  const _PaperTradeSheet({required this.market});
+  final Market market;
+
+  @override
+  ConsumerState<_PaperTradeSheet> createState() => _PaperTradeSheetState();
+}
+
+class _PaperTradeSheetState extends ConsumerState<_PaperTradeSheet> {
+  final _stakeController = TextEditingController(text: '25');
+  PaperSide _side = PaperSide.yes;
+
+  @override
+  void dispose() {
+    _stakeController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final languageCode =
+        ref.watch(settingsControllerProvider).valueOrNull?.languageCode ?? 'en';
+    final zh = languageCode == 'zh';
+    final summary = ref.watch(paperPortfolioSummaryProvider);
+    final price =
+        _side == PaperSide.yes ? widget.market.yesPrice : widget.market.noPrice;
+
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          16,
+          0,
+          16,
+          16 + MediaQuery.viewInsetsOf(context).bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              zh ? '创建模拟仓位' : 'Create paper position',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 8),
+            Text(widget.market.question,
+                maxLines: 2, overflow: TextOverflow.ellipsis),
+            const SizedBox(height: 14),
+            SegmentedButton<PaperSide>(
+              segments: const [
+                ButtonSegment(value: PaperSide.yes, label: Text('YES')),
+                ButtonSegment(value: PaperSide.no, label: Text('NO')),
+              ],
+              selected: {_side},
+              onSelectionChanged: (selection) =>
+                  setState(() => _side = selection.first),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: _stakeController,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: zh ? '模拟金额（USD）' : 'Paper stake (USD)',
+                helperText:
+                    '${zh ? '当前价格' : 'Current price'} ${price.toStringAsFixed(3)}  |  ${zh ? '可用虚拟资金' : 'Available virtual cash'} \$${summary.availableCash.toStringAsFixed(2)}',
+                prefixText: r'$',
+              ),
+            ),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () async {
+                  final stake =
+                      double.tryParse(_stakeController.text.trim()) ?? 0;
+                  if (stake <= 0 || stake > summary.availableCash) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(zh
+                          ? '请输入不超过可用虚拟资金的金额。'
+                          : 'Enter an amount within available virtual cash.'),
+                    ));
+                    return;
+                  }
+                  await ref.read(paperPortfolioProvider.notifier).open(
+                        market: widget.market,
+                        side: _side,
+                        stakeUsd: stake,
+                      );
+                  if (context.mounted) Navigator.pop(context);
+                },
+                child: Text(zh ? '确认模拟建仓' : 'Confirm paper trade'),
+              ),
+            ),
+          ],
         ),
       ),
     );

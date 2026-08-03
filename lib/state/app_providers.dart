@@ -1,9 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/market.dart';
 import '../models/opportunity.dart';
+import '../models/paper_position.dart';
 import '../models/risk_settings.dart';
 import '../models/smart_money_signal.dart';
 import '../repositories/polymarket_repository.dart';
@@ -93,6 +96,72 @@ class WatchlistController extends AsyncNotifier<Set<String>> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(_key, current.toList()..sort());
     state = AsyncData(current);
+  }
+}
+
+final paperPortfolioProvider =
+    AsyncNotifierProvider<PaperPortfolioController, List<PaperPosition>>(
+  PaperPortfolioController.new,
+);
+
+class PaperPortfolioController extends AsyncNotifier<List<PaperPosition>> {
+  static const _key = 'paperPortfolioPositionsV1';
+
+  @override
+  Future<List<PaperPosition>> build() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_key);
+    if (raw == null || raw.isEmpty) return const [];
+    try {
+      final decoded = jsonDecode(raw) as List<dynamic>;
+      return decoded
+          .whereType<Map>()
+          .map(
+              (item) => PaperPosition.fromJson(Map<String, dynamic>.from(item)))
+          .toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<void> open({
+    required Market market,
+    required PaperSide side,
+    required double stakeUsd,
+  }) async {
+    final price = side == PaperSide.yes ? market.yesPrice : market.noPrice;
+    if (stakeUsd <= 0 || price <= 0) return;
+    final current = [...(state.valueOrNull ?? const <PaperPosition>[])];
+    current.add(PaperPosition(
+      id: '${DateTime.now().microsecondsSinceEpoch}-${market.id}',
+      marketId: market.id,
+      question: market.question,
+      side: side,
+      entryPrice: price,
+      stakeUsd: stakeUsd,
+      shares: stakeUsd / price,
+      openedAt: DateTime.now(),
+    ));
+    await _persist(current);
+  }
+
+  Future<void> close(String positionId, double closePrice) async {
+    final current = [...(state.valueOrNull ?? const <PaperPosition>[])];
+    final index = current.indexWhere((position) => position.id == positionId);
+    if (index < 0 || closePrice <= 0) return;
+    current[index] = current[index].close(closePrice);
+    await _persist(current);
+  }
+
+  Future<void> reset() => _persist(const []);
+
+  Future<void> _persist(List<PaperPosition> positions) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _key,
+      jsonEncode(positions.map((position) => position.toJson()).toList()),
+    );
+    state = AsyncData(positions);
   }
 }
 
@@ -223,6 +292,17 @@ final filteredMarketsProvider = Provider<List<Market>>((ref) {
 final marketPriceHistoryProvider =
     FutureProvider.autoDispose.family<List<PricePoint>, Market>((ref, market) {
   return ref.watch(polymarketRepositoryProvider).fetchPriceHistory(market);
+});
+
+final paperPortfolioSummaryProvider = Provider<PaperPortfolioSummary>((ref) {
+  final positions = ref.watch(paperPortfolioProvider).valueOrNull ?? const [];
+  final markets = ref.watch(marketsProvider).valueOrNull ?? const <Market>[];
+  final settings = ref.watch(settingsControllerProvider).valueOrNull;
+  return PaperPortfolioSummary.calculate(
+    positions: positions,
+    markets: {for (final market in markets) market.id: market},
+    startingBalance: settings?.bankrollUsd ?? RiskSettings.defaults.bankrollUsd,
+  );
 });
 
 final smartMoneyProvider = FutureProvider<List<SmartMoneySignal>>((ref) async {
