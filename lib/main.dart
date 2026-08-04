@@ -63,7 +63,8 @@ class AppShell extends ConsumerStatefulWidget {
   ConsumerState<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends ConsumerState<AppShell> {
+class _AppShellState extends ConsumerState<AppShell>
+    with WidgetsBindingObserver {
   int _index = 0;
 
   static const _pages = [
@@ -73,6 +74,26 @@ class _AppShellState extends ConsumerState<AppShell> {
     PortfolioPage(),
     SettingsPage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    ref.invalidate(marketsProvider);
+    ref.invalidate(opportunitiesProvider);
+    ref.invalidate(smartMoneyProvider);
+  }
 
   @override
   Widget build(BuildContext context) {

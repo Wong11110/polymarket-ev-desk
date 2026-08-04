@@ -43,9 +43,14 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/key.properties
+/android/*.jks
+/android/*.keystore
 
 # Local release artifacts are uploaded to GitHub Releases instead of committed.
 /release/*.zip
+/release/*.apk
+/release/*.aab
 /release/*.tar.gz
 /release/*.mp4
 /release/*.gif

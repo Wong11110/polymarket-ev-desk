@@ -148,6 +148,20 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               value: settings.darkMode,
               onChanged: (value) => _update(settings.copyWith(darkMode: value)),
             ),
+            SwitchListTile(
+              title: Text(_label(
+                settings.languageCode,
+                '机会提醒',
+                'Opportunity alerts',
+              )),
+              subtitle: Text(_label(
+                settings.languageCode,
+                '仅在您允许系统通知后，提醒符合 EV 与流动性阈值的市场。',
+                'Notify only after you allow system notifications and a market passes your EV and liquidity rules.',
+              )),
+              value: settings.opportunityAlertsEnabled,
+              onChanged: (value) => _setOpportunityAlerts(settings, value),
+            ),
             const SizedBox(height: 16),
             TextField(
               controller: _apiKey,
@@ -194,7 +208,36 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     await ref.read(settingsControllerProvider.notifier).saveSettings(settings);
     ref.invalidate(opportunitiesProvider);
   }
+
+  Future<void> _setOpportunityAlerts(RiskSettings settings, bool value) async {
+    if (!value) {
+      await _update(settings.copyWith(opportunityAlertsEnabled: false));
+      return;
+    }
+
+    final allowed =
+        await ref.read(notificationServiceProvider).requestPermission();
+    if (!allowed) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_label(
+              settings.languageCode,
+              '系统未授予通知权限。',
+              'System notification permission was not granted.',
+            )),
+          ),
+        );
+      }
+      return;
+    }
+
+    await _update(settings.copyWith(opportunityAlertsEnabled: true));
+  }
 }
+
+String _label(String languageCode, String zh, String en) =>
+    languageCode == 'zh' ? zh : en;
 
 class _SliderTile extends StatelessWidget {
   const _SliderTile({

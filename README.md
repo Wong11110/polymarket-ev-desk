@@ -14,6 +14,7 @@ Live demo: https://ev.aldacareer.online
 - Live outcome price history and CLOB order-book panels for YES and NO tokens.
 - Fill preview that walks the ask depth level by level, reporting estimated average price, market impact, levels consumed, and insufficient depth.
 - Local paper portfolio with virtual cash, mark-to-market PnL, and order-book-aware entry estimates.
+- Optional native opportunity alerts with an explicit Android/iOS permission request; disabled by default.
 - Smart money module scaffold with mock wallet flow, ready to replace with Data API, subgraph, or indexer data.
 - External market link to open the original Polymarket page.
 - PWA manifest for iPhone home-screen usage.
@@ -92,6 +93,59 @@ flutter test
 flutter run -d chrome
 ```
 
+## Android / iOS Mobile Build
+
+The Flutter app uses the same Riverpod state, repository, analysis, paper-portfolio,
+watchlist, settings, and navigation flow on Android and iOS. When the app returns
+to the foreground it refreshes market, opportunity, and smart-money data so a
+long-lived mobile session does not keep stale radar results.
+
+Run the local quality gates before packaging:
+
+```powershell
+flutter pub get
+flutter analyze
+flutter test
+```
+
+Build Android on a machine with Android SDK command-line tools and accepted
+licenses:
+
+```powershell
+flutter doctor -v
+flutter doctor --android-licenses
+flutter build apk --debug
+flutter build appbundle --release
+```
+
+The debug APK is emitted under `build/app/outputs/flutter-apk/`. Release Android
+builds need a real signing key and should keep signing secrets outside Git.
+
+iOS packaging requires macOS, Xcode, CocoaPods, and an Apple development or
+distribution signing identity:
+
+```bash
+flutter doctor -v
+flutter pub get
+flutter analyze
+flutter test
+flutter build ios --release
+```
+
+The Windows workstation can validate Flutter code and web builds, but it cannot
+produce a signed iOS IPA. The iOS project is kept in the repository so the same
+source can be opened and archived on a Mac or CI runner.
+
+Mobile data remains analysis-only. Do not put Polymarket private keys, Cloudflare
+tunnel tokens, VPS credentials, or API secrets into the Flutter bundle.
+
+### Opportunity alerts
+
+Opportunity alerts are disabled by default. In Settings, turn on **Opportunity
+alerts** and accept the operating system permission prompt. Alerts are local to
+the device and only surface markets that pass the saved EV and liquidity rules.
+They do not execute an order, connect a wallet, or send a trading credential.
+
 Build web/PWA:
 
 ```powershell
@@ -111,4 +165,6 @@ python deploy_server.py --host 127.0.0.1 --port 8601 --directory build/web
 - Replace mock smart money with wallet/Data API/indexer data.
 - Add backend AI research service for explainable fair probability.
 - Add a server-side, wallet-signed execution handoff with pre-trade risk checks and explicit user confirmation.
-- Add Android APK build when Android SDK is available.
+- Add Android APK build when Android SDK command-line tools and licenses are available.
+- Add native alert delivery behind explicit notification permissions.
+- Add optional short voice-input interview coaching; continuous listening is out of scope.

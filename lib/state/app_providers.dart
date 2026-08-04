@@ -182,6 +182,7 @@ class SettingsController extends AsyncNotifier<RiskSettings> {
   static const _apiKey = 'openAiApiKey';
   static const _darkMode = 'darkMode';
   static const _languageCode = 'languageCode';
+  static const _opportunityAlertsEnabled = 'opportunityAlertsEnabled';
   static const _secureStorage = FlutterSecureStorage();
 
   @override
@@ -205,6 +206,8 @@ class SettingsController extends AsyncNotifier<RiskSettings> {
       darkMode: prefs.getBool(_darkMode) ?? RiskSettings.defaults.darkMode,
       languageCode:
           prefs.getString(_languageCode) ?? RiskSettings.defaults.languageCode,
+      opportunityAlertsEnabled: prefs.getBool(_opportunityAlertsEnabled) ??
+          RiskSettings.defaults.opportunityAlertsEnabled,
     );
   }
 
@@ -219,6 +222,8 @@ class SettingsController extends AsyncNotifier<RiskSettings> {
     await _writeApiKey(settings.openAiApiKey);
     await prefs.setBool(_darkMode, settings.darkMode);
     await prefs.setString(_languageCode, settings.languageCode);
+    await prefs.setBool(
+        _opportunityAlertsEnabled, settings.opportunityAlertsEnabled);
     state = AsyncData(settings);
   }
 
@@ -326,8 +331,10 @@ final opportunitiesProvider = FutureProvider<List<Opportunity>>((ref) async {
   final opportunities =
       service.analyzeMarkets(markets: markets, settings: settings);
 
-  for (final opportunity in opportunities.take(3)) {
-    await notificationService.notifyForOpportunity(opportunity, settings);
+  if (settings.opportunityAlertsEnabled) {
+    for (final opportunity in opportunities.take(3)) {
+      await notificationService.notifyForOpportunity(opportunity, settings);
+    }
   }
 
   return opportunities;

@@ -9,6 +9,7 @@ class RiskSettings {
     required this.openAiApiKey,
     required this.darkMode,
     required this.languageCode,
+    required this.opportunityAlertsEnabled,
   });
 
   final double bankrollUsd;
@@ -20,6 +21,7 @@ class RiskSettings {
   final String openAiApiKey;
   final bool darkMode;
   final String languageCode;
+  final bool opportunityAlertsEnabled;
 
   static const defaults = RiskSettings(
     bankrollUsd: 1000,
@@ -31,6 +33,7 @@ class RiskSettings {
     openAiApiKey: '',
     darkMode: true,
     languageCode: 'en',
+    opportunityAlertsEnabled: false,
   );
 
   RiskSettings copyWith({
@@ -43,6 +46,7 @@ class RiskSettings {
     String? openAiApiKey,
     bool? darkMode,
     String? languageCode,
+    bool? opportunityAlertsEnabled,
   }) {
     return RiskSettings(
       bankrollUsd: bankrollUsd ?? this.bankrollUsd,
@@ -54,6 +58,8 @@ class RiskSettings {
       openAiApiKey: openAiApiKey ?? this.openAiApiKey,
       darkMode: darkMode ?? this.darkMode,
       languageCode: languageCode ?? this.languageCode,
+      opportunityAlertsEnabled:
+          opportunityAlertsEnabled ?? this.opportunityAlertsEnabled,
     );
   }
 }
