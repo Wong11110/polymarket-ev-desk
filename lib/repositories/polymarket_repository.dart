@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/market.dart';
+import '../models/order_book.dart';
 import '../models/smart_money_signal.dart';
 
 class PolymarketRepository {
@@ -106,6 +107,32 @@ class PolymarketRepository {
     } catch (_) {
       return const [];
     }
+  }
+
+  Future<OrderBook?> fetchOrderBook(String? tokenId) async {
+    if (tokenId == null || tokenId.isEmpty) return null;
+    final query = {'token_id': tokenId};
+    final uri = kIsWeb
+        ? Uri(path: '/api/polymarket/book', queryParameters: query)
+        : Uri.https('clob.polymarket.com', '/book', query);
+    try {
+      final response =
+          await _client.get(uri).timeout(const Duration(seconds: 8));
+      if (response.statusCode != 200) return null;
+      final decoded = jsonDecode(response.body);
+      if (decoded is! Map<String, dynamic>) return null;
+      return OrderBook.fromJson(decoded);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<MarketOrderBooks> fetchMarketOrderBooks(Market market) async {
+    final books = await Future.wait([
+      fetchOrderBook(market.yesTokenId),
+      fetchOrderBook(market.noTokenId),
+    ]);
+    return MarketOrderBooks(yes: books[0], no: books[1]);
   }
 
   static final mockMarkets = <Market>[

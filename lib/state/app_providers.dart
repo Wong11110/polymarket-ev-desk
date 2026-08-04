@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/market.dart';
 import '../models/opportunity.dart';
+import '../models/order_book.dart';
 import '../models/paper_position.dart';
 import '../models/risk_settings.dart';
 import '../models/smart_money_signal.dart';
@@ -128,8 +129,10 @@ class PaperPortfolioController extends AsyncNotifier<List<PaperPosition>> {
     required Market market,
     required PaperSide side,
     required double stakeUsd,
+    double? entryPrice,
   }) async {
-    final price = side == PaperSide.yes ? market.yesPrice : market.noPrice;
+    final price = entryPrice ??
+        (side == PaperSide.yes ? market.yesPrice : market.noPrice);
     if (stakeUsd <= 0 || price <= 0) return;
     final current = [...(state.valueOrNull ?? const <PaperPosition>[])];
     current.add(PaperPosition(
@@ -292,6 +295,11 @@ final filteredMarketsProvider = Provider<List<Market>>((ref) {
 final marketPriceHistoryProvider =
     FutureProvider.autoDispose.family<List<PricePoint>, Market>((ref, market) {
   return ref.watch(polymarketRepositoryProvider).fetchPriceHistory(market);
+});
+
+final marketOrderBooksProvider =
+    FutureProvider.autoDispose.family<MarketOrderBooks, Market>((ref, market) {
+  return ref.watch(polymarketRepositoryProvider).fetchMarketOrderBooks(market);
 });
 
 final paperPortfolioSummaryProvider = Provider<PaperPortfolioSummary>((ref) {

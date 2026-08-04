@@ -1,6 +1,6 @@
 # Polymarket EV Desk
 
-Mobile-first Polymarket market radar and EV analysis PWA. It is designed for quick iPhone demos through Safari "Add to Home Screen", while keeping trading execution disabled by default.
+Mobile-first Polymarket market radar and EV analysis PWA. It is designed for quick iPhone demos through Safari "Add to Home Screen" and includes live public market data, CLOB depth previews, and a local paper portfolio.
 
 Live demo: https://ev.aldacareer.online
 
@@ -11,6 +11,9 @@ Live demo: https://ev.aldacareer.online
 - YES / NO price display, volume, liquidity, spread, end date, and liquidity score.
 - EV Gap analysis with fair probability estimate, confidence, risk label, and Fractional Kelly position sizing.
 - Opportunity detail sheet with manual fair probability stress test.
+- Live outcome price history and CLOB order-book panels for YES and NO tokens.
+- Fill preview that walks the ask depth level by level, reporting estimated average price, market impact, levels consumed, and insufficient depth.
+- Local paper portfolio with virtual cash, mark-to-market PnL, and order-book-aware entry estimates.
 - Smart money module scaffold with mock wallet flow, ready to replace with Data API, subgraph, or indexer data.
 - External market link to open the original Polymarket page.
 - PWA manifest for iPhone home-screen usage.
@@ -26,12 +29,14 @@ The current design borrows the useful parts from mature Polymarket tools while k
 
 ## Data Model
 
-Polymarket groups one or more markets under an event. Each market has YES/NO outcomes and each outcome maps to a CLOB token ID. This app currently uses Gamma event/market data for mobile market discovery, and keeps CLOB/order-book execution as a future backend integration.
+Polymarket groups one or more markets under an event. Each market has YES/NO outcomes and each outcome maps to a CLOB token ID. This app uses Gamma event/market data for discovery and public CLOB endpoints for price history and depth. The live order book is an execution estimate, not an order placement or a fill guarantee.
 
 Current polling mode:
 
 ```text
 Flutter PWA -> /api/polymarket/events -> deploy_server.py -> gamma-api.polymarket.com/events
+Flutter PWA -> /api/polymarket/prices-history -> deploy_server.py -> clob.polymarket.com/prices-history
+Flutter PWA -> /api/polymarket/book -> deploy_server.py -> clob.polymarket.com/book
 ```
 
 The app polls every 60 seconds. If the API or network fails, it falls back to mock markets so the product does not show a blank screen during demos.
@@ -46,7 +51,9 @@ This app does not:
 - place real orders
 - auto-execute trades
 
-Real execution should live in a backend with signer isolation, order-book depth checks, fees/slippage checks, manual confirmation, order-state reconciliation, and kill switches.
+Real execution must live behind a wallet-signing/backend boundary with signer isolation, order-book depth checks, fees/slippage checks, manual confirmation, order-state reconciliation, and kill switches. Polymarket's official flow requires EIP-712 signing and authenticated CLOB requests; private keys must never be embedded in this PWA.
+
+Official references: [Order book](https://docs.polymarket.com/api-reference/market-data/get-order-book), [trading overview](https://docs.polymarket.com/trading/overview), and [order creation](https://docs.polymarket.com/trading/orders/create).
 
 ## Project Structure
 
@@ -99,9 +106,9 @@ python deploy_server.py --host 127.0.0.1 --port 8601 --directory build/web
 
 ## Roadmap
 
-- Add CLOB token ID parsing and order-book depth panel.
-- Add price history chart and volume spike detection.
+- Replace 60-second polling with CLOB WebSocket book updates and stale-data indicators.
+- Add saved alert rules for price, EV, and liquidity changes.
 - Replace mock smart money with wallet/Data API/indexer data.
-- Add local alert rules for watchlist markets.
 - Add backend AI research service for explainable fair probability.
+- Add a server-side, wallet-signed execution handoff with pre-trade risk checks and explicit user confirmation.
 - Add Android APK build when Android SDK is available.
