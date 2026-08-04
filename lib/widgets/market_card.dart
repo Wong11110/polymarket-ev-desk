@@ -16,6 +16,15 @@ class MarketCard extends ConsumerWidget {
   final Market market;
   final bool compact;
 
+  void _openPaperTrade(BuildContext context, PaperSide side) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => _PaperTradeSheet(market: market, initialSide: side),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final languageCode =
@@ -95,6 +104,7 @@ class MarketCard extends ConsumerWidget {
                       label: 'YES',
                       value: market.yesPrice,
                       color: Colors.greenAccent,
+                      onTap: () => _openPaperTrade(context, PaperSide.yes),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -103,6 +113,7 @@ class MarketCard extends ConsumerWidget {
                       label: 'NO',
                       value: market.noPrice,
                       color: Colors.lightBlueAccent,
+                      onTap: () => _openPaperTrade(context, PaperSide.no),
                     ),
                   ),
                 ],
@@ -159,7 +170,8 @@ class MarketDetailSheet extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (_) => _PaperTradeSheet(market: market),
+      builder: (_) =>
+          _PaperTradeSheet(market: market, initialSide: PaperSide.yes),
     );
   }
 
@@ -298,8 +310,9 @@ class MarketDetailSheet extends ConsumerWidget {
 }
 
 class _PaperTradeSheet extends ConsumerStatefulWidget {
-  const _PaperTradeSheet({required this.market});
+  const _PaperTradeSheet({required this.market, required this.initialSide});
   final Market market;
+  final PaperSide initialSide;
 
   @override
   ConsumerState<_PaperTradeSheet> createState() => _PaperTradeSheetState();
@@ -307,11 +320,12 @@ class _PaperTradeSheet extends ConsumerStatefulWidget {
 
 class _PaperTradeSheetState extends ConsumerState<_PaperTradeSheet> {
   final _stakeController = TextEditingController(text: '25');
-  PaperSide _side = PaperSide.yes;
+  late PaperSide _side;
 
   @override
   void initState() {
     super.initState();
+    _side = widget.initialSide;
     _stakeController.addListener(_refreshQuote);
   }
 
@@ -609,32 +623,45 @@ class _MarketIcon extends StatelessWidget {
 
 class _PriceBox extends StatelessWidget {
   const _PriceBox(
-      {required this.label, required this.value, required this.color});
+      {required this.label,
+      required this.value,
+      required this.color,
+      required this.onTap});
 
   final String label;
   final double value;
   final Color color;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.45)),
-        color: color.withValues(alpha: 0.12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Row(
-          children: [
-            Text(label, style: Theme.of(context).textTheme.labelLarge),
-            const Spacer(),
-            Text(value.toStringAsFixed(2),
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w900)),
-          ],
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: color.withValues(alpha: 0.45)),
+            color: color.withValues(alpha: 0.12),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                Text(label, style: Theme.of(context).textTheme.labelLarge),
+                const Spacer(),
+                Text(value.toStringAsFixed(2),
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w900)),
+                const SizedBox(width: 4),
+                const Icon(Icons.arrow_forward, size: 16),
+              ],
+            ),
+          ),
         ),
       ),
     );
